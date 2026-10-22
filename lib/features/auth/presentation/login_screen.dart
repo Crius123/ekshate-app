@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/route_paths.dart';
 import '../../../core/errors/app_exception.dart';
 import '../domain/phone_number_validator.dart';
+import 'widgets/auth_error_banner.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -17,7 +18,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController(text: '01711000001');
+  final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
 
   bool _otpSent = false;
@@ -201,38 +202,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Error boundary feedback banner
-                  if (_errorMessage != null) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withAlpha(25),
-                        border: Border.all(color: Colors.red.withAlpha(128)),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(LucideIcons.alertCircle, color: Colors.redAccent, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: theme.textTheme.small.copyWith(color: Colors.redAccent),
-                            ),
-                          ),
-                        ],
-                      ),
+                  if (_errorMessage != null)
+                    AuthErrorBanner(
+                      message: _errorMessage!,
+                      onRetry: _errorMessage!.contains('timed out')
+                          ? (_otpSent ? _handleVerifyOtp : _handleSendOtp)
+                          : null,
                     ),
-                  ],
 
                   if (!_otpSent) ...[
-                    // Phone Number Input with Bangladeshi Prefix
+                    // Phone Number Input with Bangladeshi Prefix & Phone Masking
                     ShadInput(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      placeholder: const Text('01XXXXXXXXX'),
+                      placeholder: const Text('01711-000001'),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9\+\-\s]')),
+                        BdPhoneInputFormatter(),
                       ],
                       leading: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),

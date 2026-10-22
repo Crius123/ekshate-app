@@ -106,6 +106,7 @@ void main() {
       expect(map['available_balance'], equals(0.0));
       expect(map['escrow_balance'], equals(0.0));
       expect(map.containsKey('created_at'), isTrue);
+      expect(map['created_at'], isA<DateTime>());
 
       final recreated = UserProfile.fromFirestore(map, 'user_1');
       expect(recreated.uid, equals(user.uid));

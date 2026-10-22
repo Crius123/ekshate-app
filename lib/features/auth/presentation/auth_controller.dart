@@ -56,27 +56,29 @@ class AuthController extends Notifier<AsyncValue<UserProfile?>> {
 
   Future<UserProfile> completeProfile({
     required String displayName,
-    required String addressLine,
-    required String area,
-    required String city,
+    DeliveryAddress? address,
+    String? addressLine,
+    String? area,
+    String? city,
   }) async {
     final current = state.asData?.value ?? _repository.currentUser;
     if (current == null) {
       throw StateError('Cannot complete profile: No authenticated user');
     }
 
-    final formattedAddress = DeliveryAddress(
-      addressLine: addressLine,
-      area: area,
-      city: city,
-    ).formattedAddress;
+    final deliveryAddress = address ??
+        DeliveryAddress(
+          addressLine: addressLine ?? '',
+          area: area ?? '',
+          city: city ?? 'Dhaka',
+        );
 
     state = const AsyncValue.loading();
     try {
       final updated = await _repository.completeProfile(
         uid: current.uid,
         displayName: displayName,
-        deliveryAddress: formattedAddress,
+        deliveryAddress: deliveryAddress.formattedAddress,
       );
       state = AsyncValue.data(updated);
       return updated;
@@ -84,14 +86,6 @@ class AuthController extends Notifier<AsyncValue<UserProfile?>> {
       state = AsyncValue.error(e, st);
       rethrow;
     }
-  }
-
-  void updateAddress(String newAddress) {
-    state.whenData((profile) {
-      if (profile != null) {
-        state = AsyncValue.data(profile.copyWith(deliveryAddress: newAddress));
-      }
-    });
   }
 
   Future<void> signOut() async {

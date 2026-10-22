@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/route_paths.dart';
 import '../../../core/errors/app_exception.dart';
 import '../domain/delivery_address.dart';
+import 'widgets/auth_error_banner.dart';
 import 'auth_controller.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
@@ -108,9 +109,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     try {
       await ref.read(authStateProvider.notifier).completeProfile(
             displayName: name,
-            addressLine: addressLine,
-            area: area,
-            city: city,
+            address: DeliveryAddress(
+              addressLine: addressLine,
+              area: area,
+              city: city,
+            ),
           );
 
       if (!mounted) return;
@@ -155,29 +158,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Error boundary feedback banner
-                  if (_errorMessage != null) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withAlpha(25),
-                        border: Border.all(color: Colors.red.withAlpha(128)),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(LucideIcons.alertCircle, color: Colors.redAccent, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: theme.textTheme.small.copyWith(color: Colors.redAccent),
-                            ),
-                          ),
-                        ],
-                      ),
+                  if (_errorMessage != null)
+                    AuthErrorBanner(
+                      message: _errorMessage!,
+                      onRetry: _errorMessage!.contains('timed out') ? _handleSubmit : null,
                     ),
-                  ],
 
                   // Full Name
                   Text('Full Name', style: theme.textTheme.small),

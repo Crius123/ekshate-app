@@ -60,8 +60,9 @@ class UserProfile {
       'role': role,
       'available_balance': availableBalance,
       'escrow_balance': escrowBalance,
-      'created_at': (createdAt ?? DateTime.now()).toIso8601String(),
-      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+      // DateTime writes directly as Firestore Timestamp
+      'created_at': createdAt ?? DateTime.now(),
+      if (updatedAt != null) 'updated_at': updatedAt,
     };
   }
 

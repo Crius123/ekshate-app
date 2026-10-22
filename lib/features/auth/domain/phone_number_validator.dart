@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 /// Canonical validator and formatter for Bangladeshi mobile numbers (+8801...)
 class PhoneNumberValidator {
   PhoneNumberValidator._();
@@ -45,5 +47,37 @@ class PhoneNumberValidator {
     final prefix = canonical.substring(4, 8); // "1711"
     final rest = canonical.substring(8); // "000001"
     return '+880 $prefix-$rest';
+  }
+}
+
+/// TextInputFormatter for formatting Bangladeshi phone numbers in real-time as `01XXX-XXXXXX`
+class BdPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Strip non-digits
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    // Cap at 11 digits
+    final cappedDigits = digits.length > 11 ? digits.substring(0, 11) : digits;
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < cappedDigits.length; i++) {
+      if (i == 5) {
+        buffer.write('-');
+      }
+      buffer.write(cappedDigits[i]);
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }
