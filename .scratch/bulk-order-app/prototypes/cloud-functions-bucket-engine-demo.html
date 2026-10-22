@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Functions v2: Bucket Transaction Engine & Settlement Prototype</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d30;
+      --border: #22314e;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .container { max-width: 1250px; margin: 0 auto; }
+    header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    p.lead { color: var(--muted); font-size: 15px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+    @media (max-width: 950px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 12px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .tab-btn.active { background: var(--border); color: #fff; }
+
+    /* Buttons */
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-secondary:hover { background: #334155; }
+    .btn-info { background: var(--info); }
+    .btn-info:hover { background: #2563eb; }
+    .btn-purple { background: var(--purple); }
+    .btn-purple:hover { background: #7c3aed; }
+
+    .button-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+    /* Walkthrough */
+    .scenario-desc { font-size: 14px; color: #cbd5e1; margin-bottom: 14px; line-height: 1.6; }
+    .step-list { display: flex; flex-direction: column; gap: 10px; }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0,0,0,0.25);
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* State Visualizer */
+    .state-block { margin-bottom: 16px; }
+    .state-title { font-size: 13px; font-weight: bold; color: var(--muted); margin-bottom: 6px; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-open { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .badge-met { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .badge-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .badge-confirmed { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+
+    /* Log Output */
+    .log-box {
+      background: #060913;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 12px;
+      height: 200px;
+      overflow-y: auto;
+      color: #93c5fd;
+    }
+    .log-entry { margin-bottom: 4px; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.success { color: #4ade80; }
+    .log-entry.warn { color: #fbbf24; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Firebase Cloud Functions (v2) Bucket Transaction Engine & Settlement Prototype</h1>
+    <p class="lead">Interactive simulation of atomic Firestore transactions for <code>placeOrder</code> (single-bucket integrity, capacity clamping, rollover) and scheduled 11:59 PM <code>settleDailyCampaign</code> (confirmation vs escrow refunds).</p>
+  </header>
+
+  <div class="grid-2">
+    <!-- Left Column: Walkthroughs & Actions -->
+    <div>
+      <div class="card">
+        <h2>Guided Walkthrough Scenarios</h2>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchScenario('w1')">1. Concurrent Clamping</button>
+          <button class="tab-btn" onclick="switchScenario('w2')">2. Bucket Rollover</button>
+          <button class="tab-btn" onclick="switchScenario('w3')">3. Midnight Settlement</button>
+          <button class="tab-btn" onclick="switchScenario('w4')">4. Idempotent Retry</button>
+        </div>
+
+        <div id="scenario-content">
+          <!-- Dynamic walkthrough -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Free-Play Engine Dispatcher</h2>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">Dispatch individual Cloud Functions triggers to inspect atomic state mutations:</p>
+        <div class="button-group">
+          <button class="btn" onclick="handlers.order('user_A', 35)">placeOrder(User A, 35 kg)</button>
+          <button class="btn" onclick="handlers.order('user_B', 25)">placeOrder(User B, 25 kg)</button>
+          <button class="btn" onclick="handlers.order('user_C', 40)">placeOrder(User C, 40 kg)</button>
+          <button class="btn btn-purple" onclick="handlers.raceConditionOrder()">Simulate Race (50kg vs 50kg)</button>
+          <button class="btn btn-secondary" onclick="handlers.topup('user_A', 10000)">Top-up User A (+10,000৳)</button>
+          <button class="btn btn-info" onclick="handlers.settleDailyCampaign()">Run settleDailyCampaign Cron</button>
+          <button class="btn btn-danger" onclick="handlers.resetState()">Reset Initial State</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Server Execution & Transaction Log</h2>
+        <div class="log-box" id="logBox"></div>
+      </div>
+    </div>
+
+    <!-- Right Column: Live Backend Firestore State -->
+    <div>
+      <div class="card">
+        <h2>Simulated Firestore Cluster State</h2>
+
+        <!-- Campaign & Listing Status -->
+        <div class="state-block">
+          <div class="state-title">daily_campaigns/2026-10-21 (Dhaka TZ)</div>
+          <div class="stat-row"><span>Campaign Status:</span> <b id="uiCampaignStatus" style="color:#60a5fa">active</b></div>
+          <div class="stat-row"><span>Listing Product:</span> <b>Nagpur Oranges (1 kg)</b></div>
+          <div class="stat-row"><span>Listing Unit Price:</span> <b>180 BDT</b> (MOQ: 100 kg/bucket)</div>
+          <div class="stat-row"><span>Active Bucket Number:</span> <b id="uiActiveBucketNumber">1</b></div>
+          <div class="stat-row"><span>Total Volume Ordered:</span> <b id="uiTotalVolume">0 kg</b></div>
+        </div>
+
+        <!-- Buckets -->
+        <div class="state-block">
+          <div class="state-title">Subcollection: listings/oranges_01/buckets</div>
+          <div id="uiBucketsContainer"></div>
+        </div>
+
+        <!-- Wallets -->
+        <div class="state-block">
+          <div class="state-title">User Wallets & Escrow (users/{userId})</div>
+          <div class="stat-row">
+            <span>User A (01711000001):</span>
+            <span>Avail: <b id="uiUserABalance" style="color:#34d399">10,000</b>৳ | Escrow: <b id="uiUserAEscrow" style="color:#fbbf24">0</b>৳</span>
+          </div>
+          <div class="stat-row">
+            <span>User B (01811000002):</span>
+            <span>Avail: <b id="uiUserBBalance" style="color:#34d399">10,000</b>৳ | Escrow: <b id="uiUserBEscrow" style="color:#fbbf24">0</b>৳</span>
+          </div>
+          <div class="stat-row">
+            <span>User C (01911000003):</span>
+            <span>Avail: <b id="uiUserCBalance" style="color:#34d399">10,000</b>৳ | Escrow: <b id="uiUserCEscrow" style="color:#fbbf24">0</b>৳</span>
+          </div>
+        </div>
+
+        <!-- Orders -->
+        <div class="state-block">
+          <div class="state-title">Active Orders Collection (orders/{orderId})</div>
+          <div id="uiOrdersContainer" style="max-height: 180px; overflow-y: auto; font-size: 13px;"></div>
+        </div>
+
+        <!-- Ledger -->
+        <div class="state-block">
+          <div class="state-title">Immutable Transaction Ledger (wallet_transactions/{trxId})</div>
+          <div id="uiLedgerContainer" style="max-height: 140px; overflow-y: auto; font-size: 12px; font-family: monospace;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// CLOUD FUNCTIONS (v2) ENGINE EMULATION
+// ============================================================================
+
+const UNIT_PRICE = 180;
+const MOQ_THRESHOLD = 100;
+
+function createFreshState() {
+  return {
+    campaign: {
+      date: '2026-10-21',
+      status: 'active' // 'preview' | 'active' | 'settling' | 'settled'
+    },
+    listing: {
+      id: 'oranges_01',
+      productId: 'prod_orange_01',
+      productTitle: 'Nagpur Oranges (1 kg)',
+      unitPrice: UNIT_PRICE,
+      moqThreshold: MOQ_THRESHOLD,
+      activeBucketNumber: 1,
+      totalBucketsCount: 1,
+      totalVolumeOrdered: 0
+    },
+    buckets: {
+      1: {
+        bucketNumber: 1,
+        moqThreshold: MOQ_THRESHOLD,
+        currentQuantity: 0,
+        remainingCapacity: MOQ_THRESHOLD,
+        status: 'open', // 'open' | 'target_met' | 'failed' | 'confirmed'
+        orderCount: 0
+      }
+    },
+    users: {
+      user_A: { uid: 'user_A', name: 'Sheikh A', availableBalance: 10000, escrowBalance: 0 },
+      user_B: { uid: 'user_B', name: 'Sheikh B', availableBalance: 10000, escrowBalance: 0 },
+      user_C: { uid: 'user_C', name: 'Sheikh C', availableBalance: 10000, escrowBalance: 0 }
+    },
+    orders: [],
+    transactions: []
+  };
+}
+
+let state = createFreshState();
+
+// Core Cloud Function v2: placeOrder (Atomic Transaction)
+async function cloudFunctionPlaceOrder(userId, requestedQty) {
+  // Simulates db.runTransaction with optimistic concurrency & verification
+  if (state.campaign.status !== 'active') {
+    throw new Error(`FAILED_PRECONDITION: Daily Campaign is in '${state.campaign.status}' state. Orders only accepted between 10:00 AM and 11:59 PM.`);
+  }
+
+  const user = state.users[userId];
+  if (!user) throw new Error("NOT_FOUND: User not found");
+
+  const activeBucketNum = state.listing.activeBucketNumber;
+  const bucket = state.buckets[activeBucketNum];
+
+  if (!bucket || bucket.status !== 'open') {
+    throw new Error(`FAILED_PRECONDITION: Bucket #${activeBucketNum} is no longer accepting orders.`);
+  }
+
+  // 1. Hard Clamp Verification
+  if (requestedQty > bucket.remainingCapacity) {
+    throw new Error(`CAPACITY_EXCEEDED: Requested ${requestedQty} kg exceeds remaining bucket capacity of ${bucket.remainingCapacity} kg. Client UI must clamp to remaining capacity.`);
+  }
+
+  const totalCost = requestedQty * state.listing.unitPrice;
+  if (user.availableBalance < totalCost) {
+    throw new Error(`INSUFFICIENT_FUNDS: Total amount is ${totalCost} BDT, but user available balance is ${user.availableBalance} BDT.`);
+  }
+
+  // 2. Transaction Writes
+  // Debit available, credit escrow
+  user.availableBalance -= totalCost;
+  user.escrowBalance += totalCost;
+
+  // Increment bucket volume & update capacity
+  bucket.currentQuantity += requestedQty;
+  bucket.remainingCapacity -= requestedQty;
+  bucket.orderCount += 1;
+  state.listing.totalVolumeOrdered += requestedQty;
+
+  // Create Order document
+  const orderId = 'ord_' + Math.random().toString(36).substr(2, 6);
+  const newOrder = {
+    orderId,
+    userId,
+    listingId: state.listing.id,
+    bucketNumber: activeBucketNum,
+    quantity: requestedQty,
+    totalCost,
+    status: 'pending_bucket',
+    timestamp: new Date().toLocaleTimeString()
+  };
+  state.orders.push(newOrder);
+
+  // Record Ledger Transaction
+  const trxId = 'trx_hold_' + Math.random().toString(36).substr(2, 6);
+  state.transactions.push({
+    trxId,
+    userId,
+    type: 'order_hold',
+    amount: -totalCost,
+    orderId,
+    timestamp: new Date().toLocaleTimeString()
+  });
+
+  // 3. MOQ Threshold Check & Rollover
+  let rolloverOccurred = false;
+  let closedBucketNum = null;
+  let nextBucketNum = null;
+
+  if (bucket.currentQuantity === bucket.moqThreshold) {
+    bucket.status = 'target_met';
+    closedBucketNum = activeBucketNum;
+
+    // Confirm all orders in this closed bucket
+    state.orders.forEach(o => {
+      if (o.bucketNumber === activeBucketNum) {
+        o.status = 'confirmed';
+      }
+    });
+
+    // Rollover to Bucket #(N+1)
+    nextBucketNum = activeBucketNum + 1;
+    state.listing.activeBucketNumber = nextBucketNum;
+    state.listing.totalBucketsCount += 1;
+    state.buckets[nextBucketNum] = {
+      bucketNumber: nextBucketNum,
+      moqThreshold: MOQ_THRESHOLD,
+      currentQuantity: 0,
+      remainingCapacity: MOQ_THRESHOLD,
+      status: 'open',
+      orderCount: 0
+    };
+    rolloverOccurred = true;
+  }
+
+  return { orderId, bucketNum: activeBucketNum, rolloverOccurred, closedBucketNum, nextBucketNum };
+}
+
+// Scheduled Cloud Function v2: settleDailyCampaign (11:59 PM Cron)
+function cloudFunctionSettleDailyCampaign() {
+  if (state.campaign.status === 'settled') {
+    return { alreadySettled: true, settledBuckets: 0, refundedOrders: 0 };
+  }
+
+  // 1. Lock Campaign
+  state.campaign.status = 'settling';
+
+  let settledBuckets = 0;
+  let refundedOrders = 0;
+  let totalRefundAmount = 0;
+
+  // 2. Process All Buckets
+  Object.values(state.buckets).forEach(b => {
+    if (b.status === 'target_met') {
+      // Bucket reached MOQ: mark confirmed
+      b.status = 'confirmed';
+      settledBuckets += 1;
+      // Transfer escrow funds: in production, escrow is captured to revenue
+      state.orders.forEach(o => {
+        if (o.bucketNumber === b.bucketNumber && o.status === 'confirmed') {
+          const user = state.users[o.userId];
+          // Escrow consumed for fulfilled order
+          user.escrowBalance -= o.totalCost;
+          state.transactions.push({
+            trxId: 'trx_settle_' + Math.random().toString(36).substr(2, 6),
+            userId: o.userId,
+            type: 'order_settle',
+            amount: o.totalCost,
+            orderId: o.orderId,
+            timestamp: new Date().toLocaleTimeString()
+          });
+        }
+      });
+    } else if (b.status === 'open') {
+      // Bucket failed to reach MOQ before 11:59 PM: mark failed
+      b.status = 'failed';
+      // Automated batch refunds for all orders in unfulfilled bucket
+      state.orders.forEach(o => {
+        if (o.bucketNumber === b.bucketNumber && o.status === 'pending_bucket') {
+          o.status = 'refunded';
+          const user = state.users[o.userId];
+          user.escrowBalance -= o.totalCost;
+          user.availableBalance += o.totalCost; // Restored to available balance!
+
+          refundedOrders += 1;
+          totalRefundAmount += o.totalCost;
+
+          state.transactions.push({
+            trxId: 'trx_refund_' + Math.random().toString(36).substr(2, 6),
+            userId: o.userId,
+            type: 'order_refund',
+            amount: o.totalCost,
+            orderId: o.orderId,
+            timestamp: new Date().toLocaleTimeString()
+          });
+        }
+      });
+    }
+  });
+
+  state.campaign.status = 'settled';
+  return { alreadySettled: false, settledBuckets, refundedOrders, totalRefundAmount };
+}
+
+// ============================================================================
+// UI & LOGGER
+// ============================================================================
+
+function log(msg, level='info') {
+  const box = document.getElementById('logBox');
+  const div = document.createElement('div');
+  div.className = `log-entry ${level}`;
+  div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.prepend(div);
+}
+
+function renderUI() {
+  document.getElementById('uiCampaignStatus').innerText = state.campaign.status;
+  document.getElementById('uiActiveBucketNumber').innerText = state.listing.activeBucketNumber;
+  document.getElementById('uiTotalVolume').innerText = `${state.listing.totalVolumeOrdered} kg`;
+
+  // Buckets
+  const bContainer = document.getElementById('uiBucketsContainer');
+  bContainer.innerHTML = '';
+  Object.values(state.buckets).forEach(b => {
+    let badgeClass = 'badge-open';
+    if (b.status === 'target_met') badgeClass = 'badge-met';
+    if (b.status === 'confirmed') badgeClass = 'badge-confirmed';
+    if (b.status === 'failed') badgeClass = 'badge-failed';
+
+    const div = document.createElement('div');
+    div.className = 'stat-row';
+    div.innerHTML = `
+      <span><b>Bucket #${b.bucketNumber}</b> [${b.currentQuantity}/${b.moqThreshold} kg] (${b.remainingCapacity} kg capacity left):</span>
+      <span class="badge ${badgeClass}">${b.status}</span>
+    `;
+    bContainer.appendChild(div);
+  });
+
+  // Users
+  ['user_A', 'user_B', 'user_C'].forEach(u => {
+    const elBal = document.getElementById(`uiUser${u.slice(-1)}Balance`);
+    const elEsc = document.getElementById(`uiUser${u.slice(-1)}Escrow`);
+    if (elBal && elEsc) {
+      elBal.innerText = state.users[u].availableBalance.toLocaleString();
+      elEsc.innerText = state.users[u].escrowBalance.toLocaleString();
+    }
+  });
+
+  // Orders
+  const oContainer = document.getElementById('uiOrdersContainer');
+  oContainer.innerHTML = state.orders.map(o => {
+    let color = '#fbbf24';
+    if (o.status === 'confirmed') color = '#34d399';
+    if (o.status === 'refunded') color = '#f87171';
+    return `
+      <div style="padding: 4px 0; border-bottom: 1px dotted var(--border); display: flex; justify-content: space-between;">
+        <span>${o.orderId} (Bucket #${o.bucketNumber}): <b>${o.quantity}kg</b> (${o.totalCost}৳) by ${o.userId}</span>
+        <b style="color:${color}">${o.status}</b>
+      </div>
+    `;
+  }).reverse().join('') || '<div style="color:var(--muted); font-size:13px;">No orders placed yet.</div>';
+
+  // Ledger
+  const lContainer = document.getElementById('uiLedgerContainer');
+  lContainer.innerHTML = state.transactions.map(t => `
+    <div style="padding: 2px 0;">
+      <span>${t.timestamp} [${t.type}] ${t.userId}: <b>${t.amount > 0 ? '+' : ''}${t.amount}৳</b> (${t.trxId})</span>
+    </div>
+  `).reverse().join('') || '<div style="color:var(--muted);">No transactions recorded yet.</div>';
+}
+
+const handlers = {
+  order: async (userId, qty) => {
+    try {
+      log(`Calling placeOrder({ userId: '${userId}', quantity: ${qty} })...`, 'info');
+      const res = await cloudFunctionPlaceOrder(userId, qty);
+      log(`Order created [${res.orderId}] in Bucket #${res.bucketNum}. Total: ${qty * UNIT_PRICE} BDT.`, 'success');
+      if (res.rolloverOccurred) {
+        log(`MOQ Met for Bucket #${res.closedBucketNum}! Rolled over into Bucket #${res.nextBucketNum}.`, 'warn');
+      }
+    } catch (e) {
+      log(e.message, 'error');
+    }
+    renderUI();
+  },
+  topup: (userId, amount) => {
+    state.users[userId].availableBalance += amount;
+    state.transactions.push({
+      trxId: 'trx_topup_' + Math.random().toString(36).substr(2, 6),
+      userId,
+      type: 'top_up',
+      amount,
+      timestamp: new Date().toLocaleTimeString()
+    });
+    log(`Top-up executed: +${amount} BDT credited to ${userId}.`, 'success');
+    renderUI();
+  },
+  raceConditionOrder: async () => {
+    log("Simulating simultaneous concurrent orders: User A (50 kg) and User B (50 kg) both trying to fill Bucket #1 with 40 kg left...", 'warn');
+    const bucket = state.buckets[state.listing.activeBucketNumber];
+    log(`Current active bucket remaining capacity: ${bucket.remainingCapacity} kg.`, 'info');
+    
+    // First order
+    handlers.order('user_A', 50);
+    // Concurrent second order
+    handlers.order('user_B', 50);
+  },
+  settleDailyCampaign: () => {
+    log("11:59 PM Cron Triggered: Running settleDailyCampaign()...", 'warn');
+    const res = cloudFunctionSettleDailyCampaign();
+    if (res.alreadySettled) {
+      log("Idempotent check passed: Campaign is already settled. Zero duplicate operations.", 'info');
+    } else {
+      log(`Settlement complete: ${res.settledBuckets} bucket(s) confirmed, ${res.refundedOrders} unfulfilled order(s) refunded (${res.totalRefundAmount} BDT restored to available balances).`, 'success');
+    }
+    renderUI();
+  },
+  resetState: () => {
+    state = createFreshState();
+    log("Backend state reset to initial conditions.", 'info');
+    renderUI();
+  }
+};
+
+const scenarios = {
+  w1: {
+    title: "Walkthrough 1: Concurrent Clamping & Capacity Limits",
+    desc: "Bucket capacity is strictly bounded by MOQ. When Bucket #1 has 30 kg left, an order for 40 kg is rejected by the transaction engine. A subsequent order for 30 kg is accepted and locks the bucket.",
+    steps: [
+      { text: "1. User A places order for 70 kg (30 kg capacity remains)", fn: () => handlers.order('user_A', 70) },
+      { text: "2. User B attempts 40 kg (Rejected: exceeds 30 kg capacity)", fn: () => handlers.order('user_B', 40) },
+      { text: "3. User B orders exact remaining 30 kg (Bucket #1 completes & locks)", fn: () => handlers.order('user_B', 30) }
+    ]
+  },
+  w2: {
+    title: "Walkthrough 2: Seamless Multi-Bucket Rollover",
+    desc: "Demonstrates automatic generation of Bucket #2 once Bucket #1 reaches 100 kg. Subsequent orders immediately route to Bucket #2 with fresh 100 kg capacity.",
+    steps: [
+      { text: "1. User A buys 100 kg (Completes Bucket #1, unlocks Bucket #2)", fn: () => handlers.order('user_A', 100) },
+      { text: "2. User C places order for 45 kg (Allocated to newly opened Bucket #2)", fn: () => handlers.order('user_C', 45) }
+    ]
+  },
+  w3: {
+    title: "Walkthrough 3: Midnight 11:59 PM Settlement & Escrow Refunds",
+    desc: "Bucket #1 was confirmed during the day. Bucket #2 received 45 kg from User C, but did not reach 100 kg MOQ before 11:59 PM. Watch the settlement cron mark Bucket #2 as failed and refund User C's escrow balance back to available balance.",
+    steps: [
+      { text: "1. Fill Bucket #1 with 100 kg (Guaranteed)", fn: () => handlers.order('user_A', 100) },
+      { text: "2. User C orders 45 kg into Bucket #2 (Pending escrow hold)", fn: () => handlers.order('user_C', 45) },
+      { text: "3. Fire 11:59 PM settleDailyCampaign cron job (Watch User C refunded)", fn: () => handlers.settleDailyCampaign() }
+    ]
+  },
+  w4: {
+    title: "Walkthrough 4: Idempotency Protection",
+    desc: "In event of network retries or duplicate cron executions, settleDailyCampaign detects settled state and aborts without double-refunding or duplicate ledger entries.",
+    steps: [
+      { text: "1. Fill partial bucket and run settlement", fn: () => { handlers.order('user_A', 30); handlers.settleDailyCampaign(); } },
+      { text: "2. Re-trigger settlement cron a second time (Guaranteed 0 double-refunds)", fn: () => handlers.settleDailyCampaign() }
+    ]
+  }
+};
+
+function switchScenario(id) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.className = 'tab-btn' + (['w1','w2','w3','w4'][i] === id ? ' active' : '');
+  });
+  const sc = scenarios[id];
+  const container = document.getElementById('scenario-content');
+  container.innerHTML = `
+    <div class="scenario-desc"><b>${sc.title}</b><br>${sc.desc}</div>
+    <div class="step-list">
+      ${sc.steps.map((st, idx) => `
+        <div class="step-item">
+          <div class="step-num">${idx + 1}</div>
+          <div style="flex:1; font-size:13px;">${st.text}</div>
+          <button class="btn btn-secondary" onclick="scenarios['${id}'].steps[${idx}].fn()">Dispatch</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Initial boot
+handlers.resetState();
+switchScenario('w1');
+</script>
+</body>
+</html>

@@ -14,6 +14,11 @@ Destination: Complete architectural and domain specification (`spec.md`), Firest
 ## Decisions so far
 
 - [01-bkash-sslcommerz-integration-architecture.md](issues/01-bkash-sslcommerz-integration-architecture.md): bKash Tokenized Checkout (v1.2.0-beta) execute flow and SSLCommerz (v4) IPN validation via `val_id`; atomic write-once ledger in `wallet_transactions/{gatewayTrxId}` guarantees zero double-crediting.
+- [02-firestore-schema-and-security-rules.md](issues/02-firestore-schema-and-security-rules.md): Production schemas for products, daily campaigns, batch buckets, users with escrow balance separation, orders, and ledger; production firestore.rules lock client writes on catalogs, buckets, orders, and balances.
+- [03-cloud-functions-bucket-transaction-engine.md](issues/03-cloud-functions-bucket-transaction-engine.md): TypeScript Cloud Functions (v2) for atomic `placeOrder` with hard capacity clamping and automatic rollover to Bucket #(N+1); scheduled 11:59 PM `settleDailyCampaign` cron job with idempotent escrow captures and batch wallet refunds.
+- [04-flutter-project-scaffold-shadcn-riverpod.md](issues/04-flutter-project-scaffold-shadcn-riverpod.md): Modular feature-first Flutter client foundation with Shadcn UI (Zinc/Emerald), Riverpod state management, GoRouter shell navigation, hard capacity clamping selector, and error boundaries.
+- [05-algolia-search-sync-and-riverpod-search-ui.md](issues/05-algolia-search-sync-and-riverpod-search-ui.md): Single rolling Algolia index with daily facet filters; real-time onDocumentWritten and campaign activation batch sync Cloud Functions; 300ms debounced Riverpod search UI with Shadcn popover, category chips, and live quota progress bars.
+- [06-sms-otp-auth-and-customer-onboarding.md](issues/06-sms-otp-auth-and-customer-onboarding.md): Bangladeshi mobile phone SMS OTP verification with masked inputs, 60s countdown timer, automatic Firestore zero-balance customer profile creation adhering to security rules, and structured delivery address onboarding.
 
 ## Not yet specified
 

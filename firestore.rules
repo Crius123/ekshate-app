@@ -1,0 +1,302 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Application: Ekshate Bulk-Order Platform
+//
+// 1. Collection: products
+//    Document ID: {productId}
+//    Fields:
+//      - title: string (required, 1-200 chars) - Master product title
+//      - description: string (required, 1-2000 chars) - Master product description
+//      - category: string (required, 1-100 chars) - Product category
+//      - unit: string (required, 1-50 chars) - Measurement unit (kg, piece, liter, etc.)
+//      - media_urls: list of strings (required, max 20 items) - Photos and media assets
+//      - thumbnail_url: string (required, valid URL, max 500 chars) - Main thumbnail image URL
+//      - is_active: bool (required) - Whether product is active in system catalog
+//      - created_at: timestamp (required) - Record creation timestamp
+//      - updated_at: timestamp (required) - Last update timestamp
+//    Access:
+//      - Read: Authenticated users (request.auth != null)
+//      - Write: Denied (Cloud Functions / Admin SDK only)
+//
+// 2. Collection: daily_campaigns
+//    Document ID: {date} (Format: YYYY-MM-DD)
+//    Fields:
+//      - date: string (required, format: YYYY-MM-DD) - Campaign calendar date
+//      - status: string (required, e.g. "preview", "active", "closed", "settled")
+//      - active_from: timestamp (required) - Daily purchasing start (10:00 AM BDT)
+//      - active_to: timestamp (required) - Daily purchasing end (11:59 PM BDT)
+//      - total_listings_count: int (required, >= 0) - Total listings in campaign
+//      - created_at: timestamp (required) - Campaign creation timestamp
+//      - updated_at: timestamp (required) - Last update timestamp
+//    Access:
+//      - Read: Authenticated users (request.auth != null)
+//      - Write: Denied (Cloud Functions / Admin SDK only)
+//
+// 3. Subcollection: daily_campaigns/{date}/listings
+//    Document ID: {listingId}
+//    Fields:
+//      - product_id: string (required) - Reference to Master Product ID
+//      - product_title: string (required, 1-200 chars) - Denormalized title
+//      - unit: string (required, 1-50 chars) - Measurement unit
+//      - market_price: number (required, > 0) - Retail market benchmark price
+//      - unit_price: number (required, > 0) - Bulk discounted campaign price
+//      - discount_percent: number (required, 0-100) - Savings percentage
+//      - moq_threshold: number (required, > 0) - Minimum Order Quantity target
+//      - active_bucket_number: int (required, >= 1) - Currently active bucket
+//      - total_buckets_count: int (required, >= 1) - Total buckets opened
+//      - total_volume_ordered: number (required, >= 0) - Cumulative volume ordered
+//      - status: string (required, e.g. "active", "closed", "sold_out")
+//      - created_at: timestamp (required) - Listing creation timestamp
+//      - updated_at: timestamp (required) - Last update timestamp
+//    Access:
+//      - Read: Authenticated users (request.auth != null)
+//      - Write: Denied (Cloud Functions / Admin SDK only)
+//
+// 4. Subcollection: daily_campaigns/{date}/listings/{listingId}/buckets
+//    Document ID: {bucketNumber}
+//    Fields:
+//      - bucket_number: int (required, >= 1) - Sequential bucket index
+//      - listing_id: string (required) - Parent listing reference
+//      - date: string (required, YYYY-MM-DD) - Campaign date
+//      - moq_threshold: number (required, > 0) - Target capacity for this bucket
+//      - current_quantity: number (required, >= 0) - Accumulated quantity ordered
+//      - remaining_capacity: number (required, >= 0) - Remaining volume to reach MOQ
+//      - status: string (required, "open", "target_met", "failed", "confirmed")
+//      - order_count: int (required, >= 0) - Count of orders in this bucket
+//      - created_at: timestamp (required) - Bucket creation timestamp
+//      - updated_at: timestamp (required) - Last update timestamp
+//    Access:
+//      - Read: Authenticated users (request.auth != null)
+//      - Write: Denied (mutations exclusively executed by backend Cloud Functions transactions)
+//
+// 5. Collection: users
+//    Document ID: {userId} (matches Firebase Auth UID)
+//    Fields:
+//      - uid: string (required, immutable) - Must match request.auth.uid
+//      - phone_number: string (optional, 7-25 chars) - User's phone number
+//      - display_name: string (optional, 1-100 chars) - User's display name
+//      - email: string (optional, max 100 chars, valid email format)
+//      - delivery_address: string (optional, 1-500 chars) - Shipping address
+//      - role: string (required, immutable) - Role ('customer'); client cannot self-assign 'admin'
+//      - available_balance: number (required, immutable) - Available balance (must initialize at 0)
+//      - escrow_balance: number (required, immutable) - Reserved escrow balance (must initialize at 0)
+//      - created_at: timestamp (required, immutable) - Profile creation timestamp
+//      - updated_at: timestamp (optional) - Profile update timestamp
+//    Access:
+//      - Read: Strictly document owner (request.auth.uid == userId)
+//      - Create: Strictly document owner with available_balance == 0, escrow_balance == 0, and role == 'customer'
+//      - Update: Strictly document owner; financial and security fields (uid, role, balances, created_at) are immutable
+//      - Delete: Denied (allow delete: if false)
+//
+// 6. Collection: orders
+//    Document ID: {orderId}
+//    Fields:
+//      - user_id: string (required) - Customer UID
+//      - date: string (required, YYYY-MM-DD) - Campaign date
+//      - listing_id: string (required) - Daily listing reference
+//      - bucket_number: int (required, >= 1) - Bucket number allocated for order
+//      - product_id: string (required) - Master product ID
+//      - product_title: string (required) - Product title
+//      - unit: string (required) - Measurement unit
+//      - unit_price: number (required, > 0) - Price per unit
+//      - quantity: number (required, > 0) - Quantity purchased
+//      - total_amount: number (required, > 0) - Total order amount
+//      - status: string (required, e.g. "pending_escrow", "confirmed", "refunded", "delivered")
+//      - delivery_address: string (required, 1-500 chars) - Shipping destination
+//      - created_at: timestamp (required) - Timestamp order was placed
+//    Access:
+//      - Read: Document owner only (resource.data.user_id == request.auth.uid)
+//      - Write: Denied (created/managed exclusively through atomic placeOrder Cloud Function)
+//
+// 7. Collection: wallet_transactions
+//    Document ID: {trxId}
+//    Fields:
+//      - trx_id: string (required) - Unique transaction identifier
+//      - user_id: string (required) - Customer UID
+//      - type: string (required, e.g. "top_up", "escrow_hold", "escrow_release", "order_debit", "refund", "withdrawal")
+//      - amount: number (required, > 0) - Amount in BDT
+//      - status: string (required, e.g. "initiated", "completed", "failed")
+//      - gateway: string (optional, e.g. "bkash", "sslcommerz", "internal")
+//      - reference_id: string (optional) - Gateway or order reference
+//      - created_at: timestamp (required) - Timestamp of ledger transaction
+//    Access:
+//      - Read: Document owner only (resource.data.user_id == request.auth.uid)
+//      - Write: Denied (immutable ledger maintained strictly by backend Cloud Functions)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user matches the specified userId
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Validate optional email (if present, must be string within size and valid format)
+    function isValidOptionalEmail(data, field) {
+      return !(field in data) ||
+        (data[field] is string &&
+         data[field].size() <= 100 &&
+         isValidEmail(data[field]));
+    }
+
+    // Validate optional string (if present, must be string within [minLen, maxLen])
+    function isValidOptionalString(data, field, minLen, maxLen) {
+      return !(field in data) ||
+        (data[field] is string &&
+         data[field].size() >= minLen &&
+         data[field].size() <= maxLen);
+    }
+
+    // Validate that document contains only allowed fields
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    // Validate that specific immutable fields are not modified
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators: Users Collection
+    // ===============================================================
+
+    // Core validation function for users schema integrity (enforced on BOTH create and update)
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(data, [
+        'uid', 'phone_number', 'display_name', 'email',
+        'delivery_address', 'role', 'available_balance',
+        'escrow_balance', 'created_at', 'updated_at'
+      ]) &&
+      data.keys().hasAll(['uid', 'role', 'available_balance', 'escrow_balance', 'created_at']) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+      data.role is string && (data.role == 'customer' || data.role == 'admin') &&
+      data.available_balance is number && data.available_balance >= 0 &&
+      data.escrow_balance is number && data.escrow_balance >= 0 &&
+      data.created_at is timestamp &&
+      isValidOptionalString(data, 'phone_number', 7, 25) &&
+      isValidOptionalString(data, 'display_name', 1, 100) &&
+      isValidOptionalEmail(data, 'email') &&
+      isValidOptionalString(data, 'delivery_address', 1, 500) &&
+      (!('updated_at' in data) || data.updated_at is timestamp);
+    }
+
+    // Strict validation rules on user document creation
+    function isValidUserCreate(userId) {
+      return isValidUser(request.resource.data) &&
+        request.resource.data.uid == userId &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.role == 'customer' &&
+        (request.resource.data.available_balance == 0 || request.resource.data.available_balance == 0.0) &&
+        (request.resource.data.escrow_balance == 0 || request.resource.data.escrow_balance == 0.0) &&
+        request.resource.data.created_at <= request.time;
+    }
+
+    // Strict validation rules on user document update
+    function isValidUserUpdate(userId) {
+      return isValidUser(request.resource.data) &&
+        // Protect UID integrity
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.uid == request.auth.uid &&
+        // Protect security role from client modification
+        request.resource.data.role == resource.data.role &&
+        // Protect financial ledger balances from client modification
+        request.resource.data.available_balance == resource.data.available_balance &&
+        request.resource.data.escrow_balance == resource.data.escrow_balance &&
+        // Protect creation timestamp
+        request.resource.data.created_at == resource.data.created_at &&
+        // Ensure sensitive fields cannot be modified or deleted via diff
+        areImmutableFieldsUnchanged(['uid', 'role', 'available_balance', 'escrow_balance', 'created_at']) &&
+        // Only safe profile fields can be modified by the client
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'display_name', 'delivery_address', 'email', 'phone_number', 'updated_at'
+        ]) &&
+        // If updated_at is provided, must be timestamp
+        (!('updated_at' in request.resource.data) || request.resource.data.updated_at is timestamp);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. Master Products Catalog
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // 2. Daily Campaigns & Nested Subcollections
+    match /daily_campaigns/{date} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+
+      // 3. Daily Listings for this campaign
+      match /listings/{listingId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+
+        // 4. Batch Buckets for this listing
+        match /buckets/{bucketNumber} {
+          allow read: if isAuthenticated();
+          allow write: if false;
+        }
+      }
+    }
+
+    // 5. User Profiles and Wallets
+    match /users/{userId} {
+      // PII Protection: Only the account owner may read their profile & balances
+      allow read: if isOwner(userId);
+      // Profile Initialization: Strictly zero balances and 'customer' role
+      allow create: if isOwner(userId) && isValidUserCreate(userId);
+      // Profile Update: Balances and role are strictly immutable
+      allow update: if isOwner(userId) && isValidUserUpdate(userId);
+      // Deletion: Prevent account deletion from client (handled via Admin SDK / GDPR workflow)
+      allow delete: if false;
+    }
+
+    // 6. Orders Ledger
+    match /orders/{orderId} {
+      // Query Alignment: Customer can read their own orders; supports where("user_id", "==", request.auth.uid)
+      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+      // All order mutations must go through the atomic placeOrder Cloud Function
+      allow write: if false;
+    }
+
+    // 7. Wallet Transactions Ledger
+    match /wallet_transactions/{trxId} {
+      // Query Alignment: Customer can read their own transactions; supports where("user_id", "==", request.auth.uid)
+      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+      // Ledger integrity: Transactions are strictly written by Cloud Functions
+      allow write: if false;
+    }
+
+    // ===============================================================
+    // Default Deny Rule
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
