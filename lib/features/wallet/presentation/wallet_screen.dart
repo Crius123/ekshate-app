@@ -175,7 +175,7 @@ class WalletScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: AppDecorations.glassCard(
-                    surfaceColor: const Color(0xFF091F1A),
+                    surfaceColor: const Color(0xFFECFDF5),
                     borderColor: AppColors.emerald.withValues(alpha: 0.4),
                     borderRadius: 16,
                     hasGlow: true,
@@ -232,7 +232,7 @@ class WalletScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: AppDecorations.glassCard(
-                    surfaceColor: const Color(0xFF221708),
+                    surfaceColor: const Color(0xFFFFFBEB),
                     borderColor: AppColors.amberEscrow.withValues(alpha: 0.4),
                     borderRadius: 16,
                     hasGlow: true,
@@ -376,7 +376,7 @@ class WalletScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   children: [
-                    const Icon(LucideIcons.receipt, size: 36, color: Colors.white30),
+                    const Icon(LucideIcons.receipt, size: 36, color: AppColors.textMuted),
                     const SizedBox(height: 10),
                     Text('No transactions found', style: theme.textTheme.muted),
                   ],
@@ -407,7 +407,7 @@ class WalletScreen extends ConsumerWidget {
                   icon = LucideIcons.rotateCcw;
                   break;
                 default:
-                  badgeColor = Colors.white70;
+                  badgeColor = AppColors.textMuted;
                   icon = LucideIcons.arrowRight;
               }
 
@@ -486,7 +486,7 @@ class WalletScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontFamily: 'monospace',
-                                  color: Colors.white70,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ),
@@ -494,7 +494,7 @@ class WalletScreen extends ConsumerWidget {
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
-                              icon: const Icon(LucideIcons.copy, size: 13, color: Colors.white70),
+                              icon: const Icon(LucideIcons.copy, size: 13, color: AppColors.textMuted),
                               tooltip: 'Copy TrxID',
                               onPressed: () => _copyToClipboard(context, tx.trxId, 'Transaction ID'),
                             ),

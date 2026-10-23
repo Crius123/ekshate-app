@@ -15,7 +15,7 @@ class EkshateApp extends ConsumerWidget {
     return ShadApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       darkTheme: AppTheme.darkTheme,
       theme: AppTheme.lightTheme,
       routerConfig: router,

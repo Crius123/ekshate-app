@@ -60,7 +60,7 @@ class BatchQuotaIndicator extends StatelessWidget {
             key: const Key('batch_quota_progress_bar'),
             value: progress,
             minHeight: 8,
-            backgroundColor: Colors.white10,
+            backgroundColor: const Color(0xFFE2E8F0),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
           ),
         ),

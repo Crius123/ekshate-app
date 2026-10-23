@@ -158,7 +158,7 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
                   listing.productTitle,
                   style: theme.textTheme.h4.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
 
@@ -261,7 +261,7 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
                           '৳${subtotal.toStringAsFixed(0)}',
                           style: theme.textTheme.h4.copyWith(
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -332,17 +332,17 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
   Widget _buildImagePlaceholder(DailyListing listing) {
     return Container(
       key: Key('deal_image_placeholder_${listing.id}'),
-      color: const Color(0xFF27272A),
+      color: AppColors.cardSurfaceElevated,
       child: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.image, size: 36, color: Color(0xFF71717A)),
+            Icon(LucideIcons.image, size: 36, color: AppColors.textMuted),
             SizedBox(height: 6),
             Text(
               'Product Photography',
               style: TextStyle(
-                color: Color(0xFFA1A1AA),
+                color: AppColors.textMuted,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -355,7 +355,7 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
 
   Widget _buildImageLoadingShimmer() {
     return Container(
-      color: const Color(0xFF27272A),
+      color: AppColors.cardSurfaceElevated,
       child: const Center(
         child: SizedBox(
           width: 24,

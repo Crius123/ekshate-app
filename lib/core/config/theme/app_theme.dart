@@ -10,7 +10,9 @@ class AppTheme {
     return ShadThemeData(
       brightness: Brightness.light,
       colorScheme: const ShadZincColorScheme.light(
-        primary: Color(0xFF059669), // Emerald 600
+        primary: Color(0xFF10B981), // Emerald 500
+        background: Color(0xFFF8FAFC), // Slate 50
+        card: Color(0xFFFFFFFF), // Pure white
       ),
     );
   }

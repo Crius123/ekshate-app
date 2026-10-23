@@ -54,14 +54,7 @@ class _CampaignCountdownHeaderState
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF131D2D),
-            const Color(0xFF0F172A),
-          ],
-        ),
+        color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: primaryAccent.withValues(alpha: 0.35),
@@ -69,13 +62,13 @@ class _CampaignCountdownHeaderState
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: const Color(0x0A0F172A),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
             color: glowAccent,
-            blurRadius: 24,
+            blurRadius: 18,
             spreadRadius: -4,
             offset: const Offset(0, 2),
           ),
@@ -109,7 +102,7 @@ class _CampaignCountdownHeaderState
                     style: theme.textTheme.small.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -168,7 +161,7 @@ class _CampaignCountdownHeaderState
                       key: const Key('campaign_target_label'),
                       style: theme.textTheme.large.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -177,7 +170,10 @@ class _CampaignCountdownHeaderState
                       isPreview
                           ? 'Wholesale drops unlock at 10:00 AM BDT'
                           : 'Deals close at midnight (11:59 PM BDT)',
-                      style: theme.textTheme.muted.copyWith(fontSize: 12),
+                      style: theme.textTheme.muted.copyWith(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -208,7 +204,7 @@ class _CampaignCountdownHeaderState
               key: const Key('campaign_window_progress_bar'),
               value: timerInfo.progressPercent,
               minHeight: 5,
-              backgroundColor: Colors.white12,
+              backgroundColor: AppColors.cardSurfaceElevated,
               valueColor: AlwaysStoppedAnimation<Color>(primaryAccent),
             ),
           ),
@@ -224,17 +220,17 @@ class _CampaignCountdownHeaderState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B), // Slate 800
+            color: AppColors.cardSurfaceElevated,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: AppColors.borderSubtle,
               width: 1.0,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                color: Color(0x080F172A),
+                blurRadius: 4,
+                offset: Offset(0, 1),
               ),
             ],
           ),
@@ -246,7 +242,7 @@ class _CampaignCountdownHeaderState
               fontWeight: FontWeight.bold,
               fontFamily: 'monospace',
               letterSpacing: 0.5,
-              color: Colors.white,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -256,7 +252,8 @@ class _CampaignCountdownHeaderState
           style: const TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF94A3B8), // Slate 400
+            color: AppColors.textMuted,
+            letterSpacing: 0.5,
           ),
         ),
       ],

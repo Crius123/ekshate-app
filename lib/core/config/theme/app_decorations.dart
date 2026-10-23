@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Design tokens and glassmorphism styling helpers for modern fintech bulk commerce UI.
+/// Design tokens and styling helpers for modern fintech bulk commerce light mode UI.
 class AppColors {
   AppColors._();
 
@@ -8,37 +8,37 @@ class AppColors {
   static const Color emerald = Color(0xFF10B981); // Emerald 500
   static const Color emeraldDark = Color(0xFF059669); // Emerald 600
   static const Color emeraldLight = Color(0xFF34D399); // Emerald 400
-  static const Color emeraldGlow = Color(0x3310B981);
+  static const Color emeraldGlow = Color(0x1F10B981);
 
-  // Backgrounds & Surfaces
-  static const Color darkBackground = Color(0xFF090D16);
-  static const Color cardSurface = Color(0xFF111827); // Gray 900
-  static const Color cardSurfaceElevated = Color(0xFF1A2234);
-  static const Color cardSurfaceTranslucent = Color(0xDD111827);
+  // Backgrounds & Surfaces (Light Mode)
+  static const Color background = Color(0xFFF8FAFC); // Slate 50
+  static const Color cardSurface = Color(0xFFFFFFFF); // Pure white
+  static const Color cardSurfaceElevated = Color(0xFFF1F5F9); // Slate 100
+  static const Color cardSurfaceTranslucent = Color(0xF2FFFFFF);
 
   // Borders
-  static const Color borderSubtle = Color(0xFF1F293D);
-  static const Color borderHighlight = Color(0xFF2E3D59);
+  static const Color borderSubtle = Color(0xFFE2E8F0); // Slate 200
+  static const Color borderHighlight = Color(0xFFCBD5E1); // Slate 300
   static const Color borderEmerald = Color(0x4D10B981);
 
   // Status & Accents
-  static const Color amberEscrow = Color(0xFFF59E0B);
-  static const Color amberGlow = Color(0x33F59E0B);
-  static const Color skyCourier = Color(0xFF0EA5E9);
-  static const Color skyGlow = Color(0x330EA5E9);
-  static const Color roseRefund = Color(0xFFEF4444);
+  static const Color amberEscrow = Color(0xFFD97706); // Amber 600 (high contrast for light UI)
+  static const Color amberGlow = Color(0x1FD97706);
+  static const Color skyCourier = Color(0xFF0284C7); // Sky 600
+  static const Color skyGlow = Color(0x1F0284C7);
+  static const Color roseRefund = Color(0xFFDC2626); // Rose 600
 
-  // Typography
-  static const Color textPrimary = Color(0xFFF9FAFB);
-  static const Color textSecondary = Color(0xFFE5E7EB);
-  static const Color textMuted = Color(0xFF94A3B8);
+  // Typography (Dark charcoal & slate for crisp readability)
+  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
+  static const Color textSecondary = Color(0xFF334155); // Slate 700
+  static const Color textMuted = Color(0xFF64748B); // Slate 500
 }
 
-/// Reusable BoxDecorations for glassmorphism, micro-gradients, and soft glowing elevations.
+/// Reusable BoxDecorations for light glassmorphism, micro-gradients, and soft crisp elevations.
 class AppDecorations {
   AppDecorations._();
 
-  /// Primary modern glassmorphic card decoration with subtle border and elevation.
+  /// Primary modern card decoration with subtle border and elevation in light mode.
   static BoxDecoration glassCard({
     Color? surfaceColor,
     Color? borderColor,
@@ -55,14 +55,14 @@ class AppDecorations {
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.35),
-          blurRadius: 14,
-          offset: const Offset(0, 4),
+          color: const Color(0x0A0F172A),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
         ),
         if (hasGlow)
           BoxShadow(
             color: glowColor,
-            blurRadius: 20,
+            blurRadius: 18,
             spreadRadius: -2,
             offset: const Offset(0, 2),
           ),
@@ -80,13 +80,13 @@ class AppDecorations {
     ],
   );
 
-  /// Modern dark hero banner gradient.
+  /// Modern hero banner gradient for light mode.
   static const LinearGradient heroGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF111827),
-      Color(0xFF0F172A),
+      Color(0xFFFFFFFF),
+      Color(0xFFF8FAFC),
     ],
   );
 

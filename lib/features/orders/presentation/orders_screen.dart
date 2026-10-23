@@ -39,7 +39,7 @@ class OrdersScreen extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(14.0),
               decoration: AppDecorations.glassCard(
-                surfaceColor: const Color(0xFF141926),
+                surfaceColor: const Color(0xFFFFFBEB),
                 borderColor: AppColors.amberEscrow.withValues(alpha: 0.35),
                 borderRadius: 14,
               ),
