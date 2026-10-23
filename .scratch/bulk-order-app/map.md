@@ -38,7 +38,7 @@ Destination: Complete architectural and domain specification (`spec.md`), Firest
 
 ## Next ready issue
 
-- None (All 15 roadmap issues in `.scratch/bulk-order-app/` are complete!). Ready for production deployment, end-to-end user acceptance testing, or final polish.
+- [16-end-to-end-lifecycle-acceptance-and-smoke-suite.md](issues/16-end-to-end-lifecycle-acceptance-and-smoke-suite.md): Comprehensive end-to-end (E2E) cross-lifecycle acceptance suite executing the complete customer, community, and operator journey across all 15 discrete system modules (scheduling, onboarding, deposits, clamped bulk buying, urgency alerts, rollover, midnight settlement, procurement manifest, courier dispatch, and withdrawal payout).
 
 ## Out of scope
 
