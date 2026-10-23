@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../core/router/route_paths.dart';
+import '../../../core/config/theme/app_decorations.dart';
 import '../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../domain/order_entity.dart';
 import 'orders_controller.dart';
@@ -36,22 +37,30 @@ class OrdersScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Container(
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.muted.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.colorScheme.border.withValues(alpha: 0.6)),
+              padding: const EdgeInsets.all(14.0),
+              decoration: AppDecorations.glassCard(
+                surfaceColor: const Color(0xFF141926),
+                borderColor: AppColors.amberEscrow.withValues(alpha: 0.35),
+                borderRadius: 14,
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.clock, size: 20, color: Color(0xFFF59E0B)),
-                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.amberEscrow.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(LucideIcons.clock, size: 18, color: AppColors.amberEscrow),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Midnight Settlement (11:59 PM BDT): Active batches pool volume toward MOQ. Confirmed orders are dispatched via Pathao, Steadfast, and RedX.',
                       style: theme.textTheme.small.copyWith(
-                        color: theme.colorScheme.mutedForeground,
+                        color: AppColors.textSecondary,
                         fontSize: 12,
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -68,9 +77,9 @@ class OrdersScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.muted.withValues(alpha: 0.25),
+                  color: AppColors.cardSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.border.withValues(alpha: 0.4)),
+                  border: Border.all(color: AppColors.borderSubtle, width: 1.2),
                 ),
                 child: Row(
                   children: [
@@ -81,7 +90,7 @@ class OrdersScreen extends ConsumerWidget {
                       label: 'Active Escrow (Pending)',
                       count: counts[OrderFilterTab.activeEscrow] ?? 0,
                       isSelected: selectedTab == OrderFilterTab.activeEscrow,
-                      badgeColor: const Color(0xFFF59E0B),
+                      badgeColor: AppColors.amberEscrow,
                     ),
                     const SizedBox(width: 4),
                     _buildSegmentedTab(
@@ -91,7 +100,7 @@ class OrdersScreen extends ConsumerWidget {
                       label: 'Confirmed Deals',
                       count: counts[OrderFilterTab.confirmed] ?? 0,
                       isSelected: selectedTab == OrderFilterTab.confirmed,
-                      badgeColor: const Color(0xFF10B981),
+                      badgeColor: AppColors.emerald,
                     ),
                     const SizedBox(width: 4),
                     _buildSegmentedTab(
@@ -101,7 +110,7 @@ class OrdersScreen extends ConsumerWidget {
                       label: 'Dispatched (In Transit)',
                       count: counts[OrderFilterTab.dispatched] ?? 0,
                       isSelected: selectedTab == OrderFilterTab.dispatched,
-                      badgeColor: const Color(0xFF0EA5E9),
+                      badgeColor: AppColors.skyCourier,
                     ),
                     const SizedBox(width: 4),
                     _buildSegmentedTab(
@@ -111,7 +120,7 @@ class OrdersScreen extends ConsumerWidget {
                       label: 'Refunded Deals',
                       count: counts[OrderFilterTab.refunded] ?? 0,
                       isSelected: selectedTab == OrderFilterTab.refunded,
-                      badgeColor: const Color(0xFFEF4444),
+                      badgeColor: AppColors.roseRefund,
                     ),
                   ],
                 ),
@@ -236,19 +245,39 @@ class OrdersScreen extends ConsumerWidget {
     }
 
     return Center(
-      child: Padding(
+      child: Container(
+        margin: const EdgeInsets.all(24.0),
         padding: const EdgeInsets.all(32.0),
+        decoration: AppDecorations.glassCard(
+          surfaceColor: AppColors.cardSurface,
+          borderColor: AppColors.borderSubtle,
+          borderRadius: 20,
+        ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: theme.colorScheme.mutedForeground.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text(title, style: theme.textTheme.h4),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.emerald.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40, color: AppColors.emerald),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: theme.textTheme.h4.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               description,
               textAlign: TextAlign.center,
-              style: theme.textTheme.muted,
+              style: theme.textTheme.muted.copyWith(color: AppColors.textMuted),
             ),
           ],
         ),
@@ -267,31 +296,46 @@ class _OrderCard extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final dateFormat = DateFormat('d MMM yyyy, h:mm a');
 
-    return ShadCard(
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(order.productTitle, style: theme.textTheme.large),
-                const SizedBox(height: 4),
-                Text(
-                  'Order #${order.orderId} • ${dateFormat.format(order.createdAt)}',
-                  style: theme.textTheme.muted.copyWith(fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          _buildStatusBadge(order),
-        ],
+    return Container(
+      decoration: AppDecorations.glassCard(
+        surfaceColor: AppColors.cardSurface,
+        borderColor: AppColors.borderSubtle,
+        borderRadius: 16,
       ),
-      description: Column(
+      padding: const EdgeInsets.all(18),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.productTitle,
+                      style: theme.textTheme.large.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Order #${order.orderId} • ${dateFormat.format(order.createdAt)}',
+                      style: theme.textTheme.muted.copyWith(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildStatusBadge(order),
+            ],
+          ),
+          const SizedBox(height: 12),
 
           // Allocated Bucket Info with Live Tooltip
           Row(
@@ -316,21 +360,24 @@ class _OrderCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.muted.withValues(alpha: 0.4),
+                    color: AppColors.cardSurfaceElevated,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: theme.colorScheme.border.withValues(alpha: 0.7)),
+                    border: Border.all(color: AppColors.borderSubtle),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(LucideIcons.boxes, size: 14, color: theme.colorScheme.primary),
+                      const Icon(LucideIcons.boxes, size: 14, color: AppColors.emerald),
                       const SizedBox(width: 6),
                       Text(
                         'Allocated Bucket #${order.bucketNumber}',
-                        style: theme.textTheme.small.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.small.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(width: 6),
-                      Icon(LucideIcons.info, size: 13, color: theme.colorScheme.mutedForeground),
+                      const Icon(LucideIcons.info, size: 13, color: AppColors.textMuted),
                     ],
                   ),
                 ),
@@ -342,10 +389,11 @@ class _OrderCard extends StatelessWidget {
 
           // Quantity & Total Escrow / Amount
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.colorScheme.muted.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.cardSurfaceElevated,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.borderSubtle),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -353,11 +401,17 @@ class _OrderCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quantity Ordered', style: theme.textTheme.muted.copyWith(fontSize: 11)),
-                    const SizedBox(height: 2),
+                    Text(
+                      'Quantity Ordered',
+                      style: theme.textTheme.muted.copyWith(fontSize: 11, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       '${order.quantity % 1 == 0 ? order.quantity.toInt() : order.quantity} ${order.unit}',
-                      style: theme.textTheme.small.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.small.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -366,18 +420,18 @@ class _OrderCard extends StatelessWidget {
                   children: [
                     Text(
                       order.isDispatched ? 'Total Paid' : 'Total Escrow Held',
-                      style: theme.textTheme.muted.copyWith(fontSize: 11),
+                      style: theme.textTheme.muted.copyWith(fontSize: 11, color: AppColors.textMuted),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       '৳${order.totalAmount.toStringAsFixed(0)}',
                       style: theme.textTheme.small.copyWith(
                         fontWeight: FontWeight.bold,
                         color: order.isDispatched
-                            ? const Color(0xFF0EA5E9)
+                            ? AppColors.skyCourier
                             : (order.isConfirmed
-                                ? const Color(0xFF10B981)
-                                : (order.isPending ? const Color(0xFFF59E0B) : const Color(0xFFEF4444))),
+                                ? AppColors.emerald
+                                : (order.isPending ? AppColors.amberEscrow : AppColors.roseRefund)),
                       ),
                     ),
                   ],
@@ -388,13 +442,13 @@ class _OrderCard extends StatelessWidget {
 
           // Courier Dispatch & Consignment Tracking Card
           if (order.isDispatched) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF0EA5E9).withValues(alpha: 0.3)),
+                color: AppColors.skyCourier.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.skyCourier.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,12 +461,16 @@ class _OrderCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.muted.withValues(alpha: 0.5),
+                            color: AppColors.cardSurfaceElevated,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'Weight: ${order.parcelWeightKg} kg',
-                            style: theme.textTheme.muted.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
+                            style: theme.textTheme.muted.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                     ],
@@ -420,7 +478,7 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(LucideIcons.barcode, size: 14, color: theme.colorScheme.mutedForeground),
+                      const Icon(LucideIcons.barcode, size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -429,6 +487,7 @@ class _OrderCard extends StatelessWidget {
                             fontFamily: 'monospace',
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -450,13 +509,13 @@ class _OrderCard extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(LucideIcons.copy, size: 13, color: theme.colorScheme.primary),
+                                  const Icon(LucideIcons.copy, size: 13, color: AppColors.emerald),
                                   const SizedBox(width: 4),
-                                  Text(
+                                  const Text(
                                     'Copy',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: theme.colorScheme.primary,
+                                      color: AppColors.emerald,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -472,27 +531,29 @@ class _OrderCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           // Delivery Destination
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(LucideIcons.mapPin, size: 14, color: theme.colorScheme.mutedForeground),
+              const Icon(LucideIcons.mapPin, size: 14, color: AppColors.textMuted),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Delivery: ${order.deliveryAddress}',
-                  style: theme.textTheme.muted.copyWith(fontSize: 12),
+                  style: theme.textTheme.muted.copyWith(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
             ],
           ),
+
+          const SizedBox(height: 12),
+          _buildExplanatoryBanner(order, theme),
         ],
-      ),
-      footer: Padding(
-        padding: const EdgeInsets.only(top: 10.0),
-        child: _buildExplanatoryBanner(order, theme),
       ),
     );
   }

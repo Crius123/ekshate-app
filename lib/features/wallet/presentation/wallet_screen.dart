@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/route_paths.dart';
+import '../../../core/config/theme/app_decorations.dart';
 import '../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../../notifications/presentation/widgets/notification_preferences_modal.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -172,11 +173,13 @@ class WalletScreen extends ConsumerWidget {
               // Available Balance Card (Emerald)
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+                  padding: const EdgeInsets.all(18),
+                  decoration: AppDecorations.glassCard(
+                    surfaceColor: const Color(0xFF091F1A),
+                    borderColor: AppColors.emerald.withValues(alpha: 0.4),
+                    borderRadius: 16,
+                    hasGlow: true,
+                    glowColor: AppColors.emeraldGlow,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,13 +191,13 @@ class WalletScreen extends ConsumerWidget {
                             'Available Balance',
                             style: theme.textTheme.small.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF10B981),
+                              color: AppColors.emerald,
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
+                              color: AppColors.emerald,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(LucideIcons.check, size: 12, color: Colors.white),
@@ -207,13 +210,16 @@ class WalletScreen extends ConsumerWidget {
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF10B981),
+                          color: AppColors.emerald,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Free for orders & withdraw',
-                        style: theme.textTheme.muted.copyWith(fontSize: 11),
+                        style: theme.textTheme.muted.copyWith(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -224,11 +230,13 @@ class WalletScreen extends ConsumerWidget {
               // Escrow Balance Card (Amber)
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                  padding: const EdgeInsets.all(18),
+                  decoration: AppDecorations.glassCard(
+                    surfaceColor: const Color(0xFF221708),
+                    borderColor: AppColors.amberEscrow.withValues(alpha: 0.4),
+                    borderRadius: 16,
+                    hasGlow: true,
+                    glowColor: AppColors.amberGlow,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,13 +248,13 @@ class WalletScreen extends ConsumerWidget {
                             'Escrow Balance',
                             style: theme.textTheme.small.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFFF59E0B),
+                              color: AppColors.amberEscrow,
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
-                              color: Color(0xFFF59E0B),
+                              color: AppColors.amberEscrow,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(LucideIcons.lock, size: 12, color: Colors.white),
@@ -259,13 +267,16 @@ class WalletScreen extends ConsumerWidget {
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFF59E0B),
+                          color: AppColors.amberEscrow,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Locked in active batch deals',
-                        style: theme.textTheme.muted.copyWith(fontSize: 11),
+                        style: theme.textTheme.muted.copyWith(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -403,11 +414,11 @@ class WalletScreen extends ConsumerWidget {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.secondary.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  padding: const EdgeInsets.all(14),
+                  decoration: AppDecorations.glassCard(
+                    surfaceColor: AppColors.cardSurface,
+                    borderColor: AppColors.borderSubtle,
+                    borderRadius: 12,
                   ),
                   child: Column(
                     children: [
@@ -417,7 +428,7 @@ class WalletScreen extends ConsumerWidget {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(7),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: badgeColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
@@ -430,11 +441,17 @@ class WalletScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     tx.typeLabel,
-                                    style: theme.textTheme.small.copyWith(fontWeight: FontWeight.bold),
+                                    style: theme.textTheme.small.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
                                   Text(
                                     dateFormat.format(tx.createdAt),
-                                    style: theme.textTheme.muted.copyWith(fontSize: 11),
+                                    style: theme.textTheme.muted.copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -444,18 +461,19 @@ class WalletScreen extends ConsumerWidget {
                             tx.formattedAmount,
                             style: theme.textTheme.large.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: isCredit ? const Color(0xFF10B981) : Colors.white,
+                              color: isCredit ? AppColors.emerald : AppColors.textPrimary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       // Copyable Transaction ID Bar
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.04),
+                          color: AppColors.cardSurfaceElevated,
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.borderSubtle, width: 0.8),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -468,7 +486,7 @@ class WalletScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontFamily: 'monospace',
-                                  color: Colors.white60,
+                                  color: Colors.white70,
                                 ),
                               ),
                             ),
@@ -476,7 +494,7 @@ class WalletScreen extends ConsumerWidget {
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
-                              icon: const Icon(LucideIcons.copy, size: 13, color: Colors.white60),
+                              icon: const Icon(LucideIcons.copy, size: 13, color: Colors.white70),
                               tooltip: 'Copy TrxID',
                               onPressed: () => _copyToClipboard(context, tx.trxId, 'Transaction ID'),
                             ),
@@ -501,17 +519,21 @@ class WalletScreen extends ConsumerWidget {
       onTap: () => ref.read(transactionFilterProvider.notifier).state = id,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.06),
+          color: isSelected ? AppColors.emerald : AppColors.cardSurfaceElevated,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.emerald : AppColors.borderSubtle,
+            width: 1,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.black : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : AppColors.textMuted,
           ),
         ),
       ),

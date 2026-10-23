@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:ekshate_app/core/config/theme/app_decorations.dart';
 import 'package:ekshate_app/features/daily_sale/domain/daily_listing.dart';
 import 'package:ekshate_app/features/daily_sale/presentation/widgets/batch_quota_indicator.dart';
 import 'package:ekshate_app/features/daily_sale/presentation/widgets/capacity_quantity_selector.dart';
@@ -39,17 +40,10 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFF18181B), // Zinc 900
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF27272A), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: AppDecorations.glassCard(
+        surfaceColor: AppColors.cardSurface,
+        borderColor: AppColors.borderSubtle,
+        borderRadius: 16,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -215,7 +209,7 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
                 ),
 
                 const SizedBox(height: 16),
-                const Divider(color: Color(0xFF27272A), height: 1),
+                const Divider(color: AppColors.borderSubtle, height: 1),
                 const SizedBox(height: 14),
 
                 // 3. Batch Quota Indicator (Live volume vs MOQ, emerald progress bar, Bucket #1)
@@ -249,7 +243,7 @@ class _BulkDealCardState extends ConsumerState<BulkDealCard> {
                 ),
 
                 const SizedBox(height: 16),
-                const Divider(color: Color(0xFF27272A), height: 1),
+                const Divider(color: AppColors.borderSubtle, height: 1),
                 const SizedBox(height: 14),
 
                 // 5. Footer: Subtotal and "Reserve Volume" Button
