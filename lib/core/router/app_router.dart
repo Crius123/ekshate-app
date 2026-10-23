@@ -11,6 +11,10 @@ import '../../features/orders/presentation/orders_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/profile_setup_screen.dart';
+import '../../features/procurement/presentation/procurement_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/admin/presentation/admin_screen.dart';
+import '../../features/auth/data/auth_repository.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -19,6 +23,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: RoutePaths.dailySale,
+    redirect: (context, state) {
+      if (state.uri.path.startsWith(RoutePaths.admin)) {
+        final authRepo = ref.read(authRepositoryProvider);
+        if (authRepo.currentUser?.role != 'admin') {
+          return RoutePaths.dailySale;
+        }
+      }
+      return null;
+    },
     errorBuilder: (context, state) => Scaffold(
       body: ErrorBoundaryWidget(
         error: state.error ?? 'Page not found',
@@ -62,6 +75,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               child: WalletScreen(),
             ),
           ),
+          GoRoute(
+            path: RoutePaths.procurement,
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ProcurementScreen(),
+            ),
+          ),
         ],
       ),
       GoRoute(
@@ -73,6 +92,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: RoutePaths.profileSetup,
         builder: (context, state) => const ProfileSetupScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RoutePaths.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RoutePaths.admin,
+        builder: (context, state) => const AdminScreen(),
       ),
     ],
   );

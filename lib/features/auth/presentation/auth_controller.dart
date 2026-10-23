@@ -93,4 +93,10 @@ class AuthController extends Notifier<AsyncValue<UserProfile?>> {
     await _repository.signOut();
     state = const AsyncValue.data(null);
   }
+
+  void switchRole(String role) {
+    _repository.switchRole(role);
+    state = AsyncValue.data(_repository.currentUser);
+  }
 }
+

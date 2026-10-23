@@ -28,8 +28,11 @@ interface SettlementSummary {
  * Reusable core settlement reconciliation logic.
  * Idempotent, safe to rerun upon partial failure.
  */
-export async function executeCampaignSettlement(campaignDate: string): Promise<SettlementSummary> {
-  const db = admin.firestore();
+export async function executeCampaignSettlement(
+  campaignDate: string,
+  firestoreInstance?: admin.firestore.Firestore
+): Promise<SettlementSummary> {
+  const db = firestoreInstance || admin.firestore();
   const campaignRef = db.collection('daily_campaigns').doc(campaignDate);
 
   const campaignSnap = await campaignRef.get();
@@ -88,11 +91,13 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
       // CASE 1: BUCKET MET MOQ ('target_met' or 'confirmed')
       // -------------------------------------------------------------
       if (bucketStatus === 'target_met' || bucketStatus === 'confirmed') {
-        await bucketDoc.ref.update({
-          status: 'confirmed',
-          settled_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        summary.confirmedBuckets++;
+        if (bucketStatus !== 'confirmed') {
+          await bucketDoc.ref.update({
+            status: 'confirmed',
+            settled_at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          summary.confirmedBuckets++;
+        }
 
         // Query orders in this confirmed bucket to settle escrow balances
         const confirmedOrdersSnap = await db
@@ -105,10 +110,14 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
 
         for (const orderDoc of confirmedOrdersSnap.docs) {
           const order = orderDoc.data();
+          // Check if already captured in a previous run to guarantee idempotency
+          if (order.escrow_captured) {
+            continue;
+          }
           const userId = order.user_id;
           const totalAmount = Number(order.total_amount);
 
-          await db.runTransaction(async (transaction) => {
+          await db.runTransaction(async (transaction: any) => {
             const userRef = db.collection('users').doc(userId);
             const userSnap = await transaction.get(userRef);
             if (!userSnap.exists) return;
@@ -119,10 +128,12 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
               updated_at: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            // Ensure order is marked confirmed
+            // Ensure order is marked confirmed and flag escrow captured
             transaction.update(orderDoc.ref, {
               status: 'confirmed',
+              escrow_captured: true,
               confirmed_at: admin.firestore.FieldValue.serverTimestamp(),
+              settled_at: admin.firestore.FieldValue.serverTimestamp(),
             });
 
             // Ledger entry for escrow settlement
@@ -142,17 +153,29 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
           });
 
           summary.confirmedOrders++;
+
+          try {
+            const { notifySettlementConfirmed } = await import('./notificationEngine');
+            await notifySettlementConfirmed(
+              { ...order, id: orderDoc.id, order_id: order.order_id || orderDoc.id },
+              db
+            );
+          } catch (notifErr) {
+            console.error(`Error notifying confirmed order ${orderDoc.id}:`, notifErr);
+          }
         }
       }
       // -------------------------------------------------------------
       // CASE 2: BUCKET FAILED MOQ (remained 'open' at 11:59 PM)
       // -------------------------------------------------------------
-      else if (bucketStatus === 'open') {
-        await bucketDoc.ref.update({
-          status: 'failed',
-          settled_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        summary.failedBuckets++;
+      else if (bucketStatus === 'open' || bucketStatus === 'failed') {
+        if (bucketStatus === 'open') {
+          await bucketDoc.ref.update({
+            status: 'failed',
+            settled_at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          summary.failedBuckets++;
+        }
 
         // Query all unfulfilled orders in this partial bucket
         const pendingOrdersSnap = await db
@@ -170,10 +193,13 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
 
           for (const orderDoc of chunk) {
             const order = orderDoc.data();
+            if (order.status === 'refunded') {
+              continue;
+            }
             const userId = order.user_id;
             const refundAmount = Number(order.total_amount);
 
-            await db.runTransaction(async (transaction) => {
+            await db.runTransaction(async (transaction: any) => {
               const userRef = db.collection('users').doc(userId);
               const userSnap = await transaction.get(userRef);
               if (!userSnap.exists) return;
@@ -189,6 +215,7 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
               transaction.update(orderDoc.ref, {
                 status: 'refunded',
                 refunded_at: admin.firestore.FieldValue.serverTimestamp(),
+                settled_at: admin.firestore.FieldValue.serverTimestamp(),
               });
 
               // 3. Write immutable refund ledger entry
@@ -209,6 +236,17 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
 
             summary.refundedOrders++;
             summary.totalRefundAmount += refundAmount;
+
+            try {
+              const { notifySettlementRefund } = await import('./notificationEngine');
+              await notifySettlementRefund(
+                { ...order, id: orderDoc.id, order_id: order.order_id || orderDoc.id },
+                refundAmount,
+                db
+              );
+            } catch (notifErr) {
+              console.error(`Error notifying refunded order ${orderDoc.id}:`, notifErr);
+            }
           }
         }
       }
@@ -221,6 +259,14 @@ export async function executeCampaignSettlement(campaignDate: string): Promise<S
     settled_at: admin.firestore.FieldValue.serverTimestamp(),
     settlement_summary: summary,
   });
+
+  // 4. Automatically generate wholesale procurement manifest for confirmed won buckets
+  try {
+    const { buildProcurementManifest } = await import('./generateProcurementManifest');
+    await buildProcurementManifest(campaignDate, db);
+  } catch (manifestErr) {
+    console.error(`Error generating procurement manifest for campaign ${campaignDate}:`, manifestErr);
+  }
 
   console.log(`Campaign ${campaignDate} settlement complete:`, summary);
   return summary;

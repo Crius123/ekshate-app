@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import '../router/route_paths.dart';
 import '../../features/cart/presentation/cart_controller.dart';
+import '../../features/notifications/presentation/notifications_controller.dart';
 
 class AppScaffold extends ConsumerWidget {
   final Widget child;
@@ -14,7 +15,7 @@ class AppScaffold extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location == RoutePaths.catalog) return 1;
     if (location == RoutePaths.cart) return 2;
-    if (location == RoutePaths.orders) return 3;
+    if (location == RoutePaths.orders || location == RoutePaths.procurement) return 3;
     if (location == RoutePaths.wallet) return 4;
     return 0; // RoutePaths.dailySale
   }
@@ -43,6 +44,7 @@ class AppScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _calculateSelectedIndex(context);
     final cartItems = ref.watch(cartProvider);
+    final unreadNotifs = ref.watch(unreadNotificationCountProvider);
 
     return Scaffold(
       body: child,
@@ -66,8 +68,12 @@ class AppScaffold extends ConsumerWidget {
             ),
             label: 'Batch Cart',
           ),
-          const NavigationDestination(
-            icon: Icon(LucideIcons.package),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: unreadNotifs > 0,
+              label: Text(unreadNotifs > 99 ? '99+' : '$unreadNotifs'),
+              child: const Icon(LucideIcons.package),
+            ),
             label: 'Orders',
           ),
           const NavigationDestination(

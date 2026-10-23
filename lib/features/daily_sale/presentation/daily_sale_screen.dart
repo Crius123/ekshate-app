@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'daily_sale_controller.dart';
-import 'widgets/capacity_quantity_selector.dart';
-import '../../cart/presentation/cart_controller.dart';
-import '../../search/presentation/widgets/daily_search_bar.dart';
-import '../../../core/config/app_constants.dart';
+import 'package:ekshate_app/features/daily_sale/presentation/daily_sale_controller.dart';
+import 'package:ekshate_app/features/daily_sale/presentation/widgets/campaign_countdown_header.dart';
+import 'package:ekshate_app/features/daily_sale/presentation/widgets/bulk_deal_card.dart';
+import 'package:ekshate_app/features/search/presentation/widgets/daily_search_bar.dart';
+import 'package:ekshate_app/features/notifications/presentation/widgets/notification_bell_button.dart';
+import 'package:ekshate_app/core/config/app_constants.dart';
 
-class DailySaleScreen extends ConsumerStatefulWidget {
+class DailySaleScreen extends ConsumerWidget {
   const DailySaleScreen({super.key});
 
   @override
-  ConsumerState<DailySaleScreen> createState() => _DailySaleScreenState();
-}
-
-class _DailySaleScreenState extends ConsumerState<DailySaleScreen> {
-  final Map<String, double> _selectedQuantities = {};
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = ShadTheme.of(context);
     final listings = ref.watch(dailyListingsProvider);
     final campaignStatus = ref.watch(dailyCampaignStatusProvider);
@@ -33,6 +27,7 @@ class _DailySaleScreenState extends ConsumerState<DailySaleScreen> {
           ],
         ),
         actions: [
+          const NotificationBellButton(),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: ShadBadge.outline(
@@ -42,7 +37,9 @@ class _DailySaleScreenState extends ConsumerState<DailySaleScreen> {
                   const Icon(LucideIcons.clock, size: 12),
                   const SizedBox(width: 4),
                   Text(
-                    campaignStatus == 'active' ? 'Active: Closes 11:59 PM' : 'Preview Mode',
+                    campaignStatus == 'active'
+                        ? 'Active: Closes 11:59 PM'
+                        : 'Preview Mode',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -54,127 +51,41 @@ class _DailySaleScreenState extends ConsumerState<DailySaleScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          // 1. Search Bar with Algolia live drop-down & quick-reserve
           const DailySearchBar(),
           const SizedBox(height: 16),
-          ...listings.map((listing) {
-            final bucket = listing.activeBucket;
-            final remainingCapacity = bucket?.remainingCapacity ?? 0.0;
-            final selectedQty = _selectedQuantities[listing.id] ?? 1.0;
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: ShadCard(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      listing.productTitle,
-                      style: theme.textTheme.h4,
-                    ),
-                  ),
-                  ShadBadge(
-                    child: Text('Bucket #${listing.activeBucketNumber}'),
-                  ),
-                ],
-              ),
-              description: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        '৳${listing.unitPrice.toStringAsFixed(0)}/${listing.unit}',
-                        style: theme.textTheme.h3.copyWith(color: const Color(0xFF10B981)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '৳${listing.marketPrice.toStringAsFixed(0)}',
-                        style: theme.textTheme.muted.copyWith(
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ShadBadge.secondary(
-                        child: Text('${listing.discountPercent.toStringAsFixed(0)}% OFF'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Bucket progress indicator
-                  Text(
-                    'Batch Quota: ${bucket?.currentQuantity.toStringAsFixed(0)}/${bucket?.moqThreshold.toStringAsFixed(0)} ${listing.unit} ordered',
-                    style: theme.textTheme.small,
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: bucket?.progressPercentage ?? 0.0,
-                    backgroundColor: Colors.white10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 16),
-                  // Capacity Clamped Quantity Selector
-                  CapacityQuantitySelector(
-                    currentQuantity: selectedQty,
-                    remainingCapacity: remainingCapacity,
-                    unit: listing.unit,
-                    onQuantityChanged: (qty) {
-                      setState(() {
-                        _selectedQuantities[listing.id] = qty;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              footer: Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Subtotal: ৳${(listing.unitPrice * selectedQty).toStringAsFixed(0)}',
-                      style: theme.textTheme.large.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    ShadButton(
-                      enabled: remainingCapacity > 0,
-                      onPressed: () {
-                        try {
-                          ref.read(cartProvider.notifier).addItem(listing, selectedQty);
-                          ShadToaster.of(context).show(
-                            ShadToast(
-                              title: const Text('Added to Batch Cart'),
-                              description: Text('Added ${selectedQty.toStringAsFixed(0)} ${listing.unit} to your order.'),
-                            ),
-                          );
-                        } catch (e) {
-                          ShadToaster.of(context).show(
-                            ShadToast.destructive(
-                              title: const Text('Capacity Exceeded'),
-                              description: Text(e.toString()),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.shoppingBag, size: 16),
-                          SizedBox(width: 8),
-                          Text('Reserve Volume'),
-                        ],
-                      ),
-                    ),
-                  ],
+          // 2. Campaign Countdown Header (Dynamic countdown to 10:00 AM or 11:59 PM BDT)
+          const CampaignCountdownHeader(),
+          const SizedBox(height: 20),
+
+          // 3. Section Title
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Active Wholesale Deals',
+                style: theme.textTheme.h4.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
                 ),
               ),
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
-          );
-        }),
-      ],
-    ),
+              ShadBadge.secondary(
+                child: Text('${listings.length} Deals Live'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 4. High-Fidelity Bulk Deal Cards
+          ...listings.map((listing) {
+            return BulkDealCard(
+              key: ValueKey(listing.id),
+              listing: listing,
+            ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.05, end: 0);
+          }),
+        ],
+      ),
     );
   }
 }

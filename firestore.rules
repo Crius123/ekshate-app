@@ -109,7 +109,7 @@ rules_version = '2';
 //      - delivery_address: string (required, 1-500 chars) - Shipping destination
 //      - created_at: timestamp (required) - Timestamp order was placed
 //    Access:
-//      - Read: Document owner only (resource.data.user_id == request.auth.uid)
+//      - Read: Document owner (resource.data.user_id == request.auth.uid) OR Admin (isAdmin())
 //      - Write: Denied (created/managed exclusively through atomic placeOrder Cloud Function)
 //
 // 7. Collection: wallet_transactions
@@ -126,6 +126,80 @@ rules_version = '2';
 //    Access:
 //      - Read: Document owner only (resource.data.user_id == request.auth.uid)
 //      - Write: Denied (immutable ledger maintained strictly by backend Cloud Functions)
+//
+// 8. Collection: procurement_manifests
+//    Document ID: {date} (Format: YYYY-MM-DD)
+//    Fields:
+//      - date: string (required, format: YYYY-MM-DD, immutable) - Calendar date matching doc ID
+//      - total_confirmed_volume: number (required, >= 0, immutable) - Aggregated bulk volume
+//      - total_procurement_cost: number (required, >= 0, immutable) - Estimated wholesale cost
+//      - total_items_count: int / number (required, >= 0, immutable) - Total distinct items count
+//      - total_buckets_count: int / number (required, >= 0, immutable) - Total confirmed buckets count
+//      - items: list of maps (required, max 500 items) - Item checklist with procurement progress
+//      - status: string (required, 'pending_procurement', 'in_procurement', 'procured')
+//      - csv_payload: string (optional, max 1000000 chars, immutable) - CSV export payload
+//      - created_at: timestamp (required, immutable) - Manifest creation timestamp
+//      - updated_at: timestamp (required) - Last update / checklist progress timestamp
+//    Access:
+//      - Read: Authenticated users (isAuthenticated())
+//      - Create: Denied (Cloud Functions backend only)
+//      - Update: Authenticated users can update checklist progress & status ('status', 'items', 'updated_at'); admin users can perform operational updates. Date and financial totals are strictly immutable.
+//      - Delete: Denied (allow delete: if false)
+//
+// 9. Collection: fcm_tokens
+//    Document ID: {userId} (matches Firebase Auth UID)
+//    Fields:
+//      - user_id: string (required, immutable) - Must match request.auth.uid and doc ID
+//      - tokens: list of strings (optional, max 20 items) - Active FCM registration tokens
+//      - preferences: map (optional) - User notification category preferences (orderUpdates, walletAlerts, communityDrops: bool)
+//      - updated_at: timestamp (optional) - Last token registration / preference update timestamp
+//    Access:
+//      - Read: Strictly document owner (request.auth.uid == userId)
+//      - Create: Strictly document owner (request.auth.uid == userId) with schema validation
+//      - Update: Strictly document owner (request.auth.uid == userId); user_id is immutable
+//      - Delete: Denied (allow delete: if false)
+//
+// 10. Collection: notifications
+//    Document ID: {notificationId}
+//    Fields:
+//      - id: string (optional, 1-128 chars, immutable) - Notification unique identifier
+//      - user_id: string (required, immutable) - Recipient user UID, 'broadcast', or 'topic:...'
+//      - title: string (required, immutable, 1-200 chars) - Notification title
+//      - body: string (required, immutable, 1-1000 chars) - Notification body message
+//      - category: string (required, immutable, e.g. 'orders', 'wallet', 'community') - Notification category
+//      - is_read: bool (required, mutable) - Read/unread status flag
+//      - read_at: timestamp (optional, mutable) - Timestamp when recipient marked notification as read
+//      - deep_link: string (optional, immutable, max 500 chars) - Target route or deep link
+//      - metadata: map (optional, immutable) - Dynamic context payload
+//      - created_at: timestamp (required, immutable) - Creation timestamp
+//      - updated_at: timestamp (optional, mutable) - Last update timestamp
+//    Access:
+//      - Read: Authenticated recipient (resource.data.user_id == request.auth.uid || resource.data.user_id == 'broadcast' || resource.data.user_id.matches('^topic:.*'))
+//      - Create: Denied (Cloud Functions / Admin SDK only)
+//      - Update: Authenticated recipient owner only; strictly restricted to updating read status fields ('is_read', 'read_at', 'updated_at')
+//      - Delete: Authenticated recipient owner only (resource.data.user_id == request.auth.uid)
+//
+// 11. Collection: withdrawal_requests
+//    Document ID: {requestId}
+//    Fields:
+//      - user_id: string (required, immutable) - Customer UID
+//      - amount: number (required, > 0, immutable) - Amount requested
+//      - payout_method: string (required, immutable, e.g. 'bkash', 'nagad', 'bank')
+//      - account_number: string (required, immutable, 5-50 chars) - Phone or account number
+//      - bank_name: string (optional, immutable)
+//      - account_holder_name: string (optional, immutable)
+//      - status: string (required, 'pending' on create, 'pending' | 'approved' | 'rejected')
+//      - rejection_reason: string (optional)
+//      - reviewed_by: string (optional)
+//      - reviewed_at: timestamp (optional)
+//      - trx_id: string (optional)
+//      - created_at: timestamp (required, immutable)
+//      - updated_at: timestamp (optional)
+//    Access:
+//      - Read: Document owner (resource.data.user_id == request.auth.uid) OR Admin (isAdmin())
+//      - Create: Document owner (request.auth.uid == request.resource.data.user_id) with status == 'pending' and amount > 0
+//      - Update: Admin (isAdmin()) only; customers cannot alter withdrawal requests once submitted
+//      - Delete: Denied (allow delete: if false)
 //
 // ===============================================================
 
@@ -144,6 +218,21 @@ service cloud.firestore {
     // Check if the authenticated user matches the specified userId
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is an admin (derived from auth token custom claims or users collection profile)
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((request.auth.token.role == 'admin') ||
+         (request.auth.token.admin == true) ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    // Validate date string format (YYYY-MM-DD)
+    function isValidDateId(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$");
     }
 
     // Validate email format
@@ -237,6 +326,164 @@ service cloud.firestore {
     }
 
     // ===============================================================
+    // Domain Validators: Procurement Manifests Collection
+    // ===============================================================
+
+    // Core validation function for procurement_manifests schema integrity
+    function isValidProcurementManifest(data) {
+      return hasOnlyAllowedFields(data, [
+        'date', 'total_confirmed_volume', 'total_procurement_cost',
+        'total_items_count', 'total_buckets_count', 'items',
+        'status', 'csv_payload', 'created_at', 'updated_at'
+      ]) &&
+      data.keys().hasAll([
+        'date', 'total_confirmed_volume', 'total_procurement_cost',
+        'total_items_count', 'total_buckets_count', 'items',
+        'status', 'created_at', 'updated_at'
+      ]) &&
+      isValidDateId(data.date) &&
+      data.total_confirmed_volume is number && data.total_confirmed_volume >= 0 &&
+      data.total_procurement_cost is number && data.total_procurement_cost >= 0 &&
+      (data.total_items_count is int || data.total_items_count is number) && data.total_items_count >= 0 &&
+      (data.total_buckets_count is int || data.total_buckets_count is number) && data.total_buckets_count >= 0 &&
+      data.items is list && data.items.size() <= 500 &&
+      data.status is string &&
+      data.status in ['pending_procurement', 'in_procurement', 'procured'] &&
+      isValidOptionalString(data, 'csv_payload', 0, 1000000) &&
+      data.created_at is timestamp &&
+      data.updated_at is timestamp;
+    }
+
+    // Strict validation rules on procurement manifest update
+    function isValidProcurementManifestUpdate(date) {
+      return isValidProcurementManifest(request.resource.data) &&
+        // Protect date identifier and ensure it matches the doc ID
+        request.resource.data.date == resource.data.date &&
+        request.resource.data.date == date &&
+        // Protect original creation timestamp
+        request.resource.data.created_at == resource.data.created_at &&
+        // Explicitly lock immutable fields
+        areImmutableFieldsUnchanged(['date', 'created_at']) &&
+        (
+          // Admin user can perform full operational manifest updates (date and created_at remain immutable)
+          isAdmin() ||
+          // Authenticated operations users: strictly limited to checklist progress & status
+          (
+            areImmutableFieldsUnchanged([
+              'date', 'total_confirmed_volume', 'total_procurement_cost',
+              'total_items_count', 'total_buckets_count', 'csv_payload', 'created_at'
+            ]) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'items', 'updated_at'
+            ])
+          )
+        );
+    }
+
+    // ===============================================================
+    // Domain Validators: FCM Tokens Collection
+    // ===============================================================
+
+    // Validate notification preferences map structure
+    function isValidFcmPreferences(prefs) {
+      return prefs is map &&
+        prefs.keys().hasOnly(['orderUpdates', 'walletAlerts', 'communityDrops']) &&
+        (!('orderUpdates' in prefs) || prefs.orderUpdates is bool) &&
+        (!('walletAlerts' in prefs) || prefs.walletAlerts is bool) &&
+        (!('communityDrops' in prefs) || prefs.communityDrops is bool);
+    }
+
+    // Core validation function for fcm_tokens schema integrity (enforced on BOTH create and update)
+    function isValidFcmTokensDoc(data, userId) {
+      return hasOnlyAllowedFields(data, ['user_id', 'tokens', 'preferences', 'updated_at']) &&
+        data.keys().hasAll(['user_id']) &&
+        data.user_id is string &&
+        data.user_id == userId &&
+        data.user_id == request.auth.uid &&
+        (!('tokens' in data) || (data.tokens is list && data.tokens.size() <= 20)) &&
+        (!('preferences' in data) || isValidFcmPreferences(data.preferences)) &&
+        (!('updated_at' in data) || data.updated_at is timestamp);
+    }
+
+    // ===============================================================
+    // Domain Validators: Notifications Collection
+    // ===============================================================
+
+    // Validation for notification status update by recipient owner
+    function isValidNotificationUpdate() {
+      return request.resource.data.user_id == resource.data.user_id &&
+        areImmutableFieldsUnchanged([
+          'id', 'user_id', 'title', 'body', 'category',
+          'deep_link', 'metadata', 'created_at'
+        ]) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'is_read', 'read_at', 'updated_at'
+        ]) &&
+        request.resource.data.is_read is bool &&
+        (!('read_at' in request.resource.data) || request.resource.data.read_at is timestamp) &&
+        (!('updated_at' in request.resource.data) || request.resource.data.updated_at is timestamp);
+    }
+
+    // ===============================================================
+    // Domain Validators: Withdrawal Requests Collection
+    // ===============================================================
+
+    // Core validation function for withdrawal_requests schema integrity
+    function isValidWithdrawalRequest(data) {
+      return hasOnlyAllowedFields(data, [
+        'user_id', 'amount', 'payout_method', 'account_number',
+        'bank_name', 'account_holder_name', 'status',
+        'rejection_reason', 'reviewed_by', 'reviewed_at',
+        'trx_id', 'created_at', 'updated_at'
+      ]) &&
+      data.keys().hasAll([
+        'user_id', 'amount', 'payout_method', 'account_number', 'status', 'created_at'
+      ]) &&
+      data.user_id is string && data.user_id.size() >= 1 && data.user_id.size() <= 128 &&
+      data.amount is number && data.amount > 0 &&
+      data.payout_method is string && data.payout_method.size() >= 1 && data.payout_method.size() <= 50 &&
+      data.account_number is string && data.account_number.size() >= 5 && data.account_number.size() <= 50 &&
+      isValidOptionalString(data, 'bank_name', 1, 100) &&
+      isValidOptionalString(data, 'account_holder_name', 1, 100) &&
+      data.status is string && data.status in ['pending', 'approved', 'rejected'] &&
+      isValidOptionalString(data, 'rejection_reason', 1, 500) &&
+      isValidOptionalString(data, 'reviewed_by', 1, 128) &&
+      (!('reviewed_at' in data) || data.reviewed_at is timestamp) &&
+      isValidOptionalString(data, 'trx_id', 1, 128) &&
+      data.created_at is timestamp &&
+      (!('updated_at' in data) || data.updated_at is timestamp);
+    }
+
+    // Strict validation rules on withdrawal request creation
+    function isValidWithdrawalRequestCreate() {
+      return isValidWithdrawalRequest(request.resource.data) &&
+        request.resource.data.user_id == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.created_at <= request.time &&
+        !('rejection_reason' in request.resource.data) &&
+        !('reviewed_by' in request.resource.data) &&
+        !('reviewed_at' in request.resource.data) &&
+        !('trx_id' in request.resource.data);
+    }
+
+    // Strict validation rules on withdrawal request update (administrative review)
+    function isValidWithdrawalRequestUpdate() {
+      return isValidWithdrawalRequest(request.resource.data) &&
+        // Customer request details and creation timestamp are immutable
+        request.resource.data.user_id == resource.data.user_id &&
+        request.resource.data.amount == resource.data.amount &&
+        request.resource.data.payout_method == resource.data.payout_method &&
+        request.resource.data.account_number == resource.data.account_number &&
+        request.resource.data.created_at == resource.data.created_at &&
+        areImmutableFieldsUnchanged([
+          'user_id', 'amount', 'payout_method', 'account_number', 'created_at'
+        ]) &&
+        (!('bank_name' in resource.data) || request.resource.data.bank_name == resource.data.bank_name) &&
+        (!('account_holder_name' in resource.data) || request.resource.data.account_holder_name == resource.data.account_holder_name);
+    }
+
+    // ===============================================================
     // Collection Rules
     // ===============================================================
 
@@ -278,8 +525,8 @@ service cloud.firestore {
 
     // 6. Orders Ledger
     match /orders/{orderId} {
-      // Query Alignment: Customer can read their own orders; supports where("user_id", "==", request.auth.uid)
-      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+      // Query Alignment: Customer can read their own orders; supports where("user_id", "==", request.auth.uid) or Admin
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
       // All order mutations must go through the atomic placeOrder Cloud Function
       allow write: if false;
     }
@@ -290,6 +537,77 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
       // Ledger integrity: Transactions are strictly written by Cloud Functions
       allow write: if false;
+    }
+
+    // 8. Procurement Manifests
+    match /procurement_manifests/{date} {
+      // Read: Authenticated users can read daily manifests and checklist progress
+      allow read: if isAuthenticated();
+
+      // Create: Denied for clients (manifest generation strictly executed by backend Cloud Functions)
+      allow create: if false;
+
+      // Update: Authenticated users / operations staff can update checklist progress & status;
+      // Admin users have full operational update access.
+      // Date, financial totals, counts, created_at, and csv_payload are strictly protected.
+      allow update: if isAuthenticated() && isValidProcurementManifestUpdate(date);
+
+      // Delete: Denied (manifest records are permanent audit logs)
+      allow delete: if false;
+    }
+
+    // 9. FCM Device Tokens and Push Preferences
+    match /fcm_tokens/{userId} {
+      // Read: Document owner only
+      allow read: if isOwner(userId);
+
+      // Create: Document owner only with strict schema validation
+      allow create: if isOwner(userId) && isValidFcmTokensDoc(request.resource.data, userId);
+
+      // Update: Document owner only; user_id is immutable
+      allow update: if isOwner(userId) &&
+                       isValidFcmTokensDoc(request.resource.data, userId) &&
+                       areImmutableFieldsUnchanged(['user_id']);
+
+      // Delete: Denied (managed via token pruning or account lifecycle)
+      allow delete: if false;
+    }
+
+    // 10. In-App and Push Notifications
+    match /notifications/{notificationId} {
+      // Read: Authenticated recipient, broadcast, or topic subscriber
+      allow read: if isAuthenticated() &&
+                     (resource.data.user_id == request.auth.uid ||
+                      resource.data.user_id == 'broadcast' ||
+                      (resource.data.user_id is string && resource.data.user_id.matches('^topic:.*')));
+
+      // Create: Denied for clients (notifications generated exclusively by system/Cloud Functions Admin SDK)
+      allow create: if false;
+
+      // Update: Recipient owner only; strictly restricted to updating read status fields
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid &&
+                       isValidNotificationUpdate();
+
+      // Delete: Recipient owner can dismiss/clear their own notifications
+      allow delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // 11. Withdrawal Requests
+    match /withdrawal_requests/{requestId} {
+      // Read: Document owner or admin
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+
+      // Create: Document owner with status == 'pending' and positive amount
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == request.resource.data.user_id &&
+                       isValidWithdrawalRequestCreate();
+
+      // Update: Admin only; customers cannot alter withdrawal requests once submitted
+      allow update: if isAdmin();
+
+      // Delete: Denied (financial audit records)
+      allow delete: if false;
     }
 
     // ===============================================================

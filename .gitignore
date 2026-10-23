@@ -10,6 +10,7 @@ Thumbs.db
 
 # Node / Scratch
 node_modules/
+functions/lib/
 npm-debug.log*
 
 # Flutter / Dart build artifacts (for when flutter project is scaffolded)

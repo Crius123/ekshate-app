@@ -5,6 +5,8 @@ class CartItem {
   final String unit;
   final double quantity;
   final double maxAllowedCapacity; // Hard clamped to bucket.remainingCapacity
+  final String? date;
+  final String? imageUrl;
 
   const CartItem({
     required this.listingId,
@@ -13,6 +15,8 @@ class CartItem {
     required this.unit,
     required this.quantity,
     required this.maxAllowedCapacity,
+    this.date,
+    this.imageUrl,
   });
 
   double get totalAmount => unitPrice * quantity;
@@ -20,6 +24,8 @@ class CartItem {
   CartItem copyWith({
     double? quantity,
     double? maxAllowedCapacity,
+    String? date,
+    String? imageUrl,
   }) {
     return CartItem(
       listingId: listingId,
@@ -28,6 +34,8 @@ class CartItem {
       unit: unit,
       quantity: quantity ?? this.quantity,
       maxAllowedCapacity: maxAllowedCapacity ?? this.maxAllowedCapacity,
+      date: date ?? this.date,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

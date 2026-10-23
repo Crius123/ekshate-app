@@ -4,11 +4,11 @@
 
 **Blocked by:** 06: SMS OTP Authentication & Customer Profile Onboarding
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] High-fidelity Wallet screen presents two prominent summary cards: `Available Balance` (emerald) and `Escrow Balance` (amber, noting locked batch deals).
-- [ ] In-app bKash Tokenized Checkout flow allows customers to enter amount and triggers secure checkout session with transaction status polling.
-- [ ] SSLCommerz hosted payment option generates secure session redirect with IPN server callback verification.
-- [ ] Cloud Function handles payment callbacks by atomically verifying `wallet_transactions/{gatewayTrxId}` to guarantee zero duplicate credits before incrementing `available_balance`.
-- [ ] Real-time transaction history displays categorized ledger entries (`top_up`, `order_hold`, `order_settle`, `order_refund`) with timestamps and copyable transaction IDs.
-- [ ] Integration tests verify atomic deposit balance increments, idempotency against repeated webhooks, and ledger immutability.
+- [x] High-fidelity Wallet screen presents two prominent summary cards: `Available Balance` (emerald) and `Escrow Balance` (amber, noting locked batch deals).
+- [x] In-app bKash Tokenized Checkout flow allows customers to enter amount and triggers secure checkout session with transaction status polling.
+- [x] SSLCommerz hosted payment option generates secure session redirect with IPN server callback verification.
+- [x] Cloud Function handles payment callbacks by atomically verifying `wallet_transactions/{gatewayTrxId}` to guarantee zero duplicate credits before incrementing `available_balance`.
+- [x] Real-time transaction history displays categorized ledger entries (`top_up`, `order_hold`, `order_settle`, `order_refund`) with timestamps and copyable transaction IDs.
+- [x] Integration tests verify atomic deposit balance increments, idempotency against repeated webhooks, and ledger immutability.

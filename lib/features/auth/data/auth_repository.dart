@@ -23,6 +23,12 @@ abstract class AuthRepository {
     required String deliveryAddress,
   });
   Future<void> signOut();
+  void updateBalances({
+    required String uid,
+    double? availableBalanceDelta,
+    double? escrowBalanceDelta,
+  });
+  void switchRole(String role);
 }
 
 class MockAuthRepository implements AuthRepository {
@@ -32,8 +38,20 @@ class MockAuthRepository implements AuthRepository {
     displayName: 'Sheikh Buyer',
     email: 'buyer@ekshate.com',
     deliveryAddress: 'House 12, Road 5, Dhanmondi, Dhaka',
+    role: 'customer',
     availableBalance: 8500.0,
     escrowBalance: 1800.0,
+  );
+
+  static const defaultMockAdmin = UserProfile(
+    uid: 'admin_dev_01',
+    phoneNumber: '+8801711999999',
+    displayName: 'Operations Admin',
+    email: 'admin@ekshate.com',
+    deliveryAddress: 'Operations HQ, Karwan Bazar, Dhaka',
+    role: 'admin',
+    availableBalance: 250000.0,
+    escrowBalance: 0.0,
   );
 
   final Duration simulatedDelay;
@@ -69,6 +87,28 @@ class MockAuthRepository implements AuthRepository {
       _currentUser = user;
       _authController.add(user);
     }
+  }
+
+  @override
+  void updateBalances({
+    required String uid,
+    double? availableBalanceDelta,
+    double? escrowBalanceDelta,
+  }) {
+    final existing = _users[uid] ?? _currentUser;
+    if (existing == null) return;
+    final updated = existing.copyWith(
+      availableBalance: (existing.availableBalance + (availableBalanceDelta ?? 0.0)).clamp(0.0, double.infinity),
+      escrowBalance: (existing.escrowBalance + (escrowBalanceDelta ?? 0.0)).clamp(0.0, double.infinity),
+    );
+    seedUser(updated);
+  }
+
+  @override
+  void switchRole(String role) {
+    if (_currentUser == null) return;
+    final updated = _currentUser!.copyWith(role: role);
+    seedUser(updated);
   }
 
   void expireOtp(String phoneNumber) {
