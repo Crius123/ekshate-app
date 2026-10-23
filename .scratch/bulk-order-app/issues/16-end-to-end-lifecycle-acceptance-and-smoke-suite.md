@@ -4,9 +4,9 @@
 
 **Blocked by:** 15: Admin Dashboard Interface for Daily Campaign Scheduling & Operator Financial Review
 
-**Status:** ready-for-agent
+**Status:** closed
 
-- [ ] Complete Backend E2E Lifecycle Simulation (`functions/src/test/e2eLifecycle.test.ts`):
+- [x] Complete Backend E2E Lifecycle Simulation (`functions/src/test/e2eLifecycle.test.ts`):
   - **Phase 1: Deal Scheduling**: Admin provisions a daily wholesale listing (100 kg MOQ at ৳120/kg, benchmark ৳180/kg) with auto-initialized Bucket #1.
   - **Phase 2: Customer Onboarding & Wallet Top-up**: Multiple customers (User A, User B, User C) onboard and deposit funds via bKash & SSLCommerz with idempotent ledger verification.
   - **Phase 3: Community Bulk Ordering & Hard Clamping**:
@@ -27,7 +27,7 @@
     - User D submits withdrawal request for ৳2,400 to bKash.
     - Admin reviews, approves, debits wallet balance, and writes `withdrawal_payout` ledger entry.
 
-- [ ] Flutter Unified Acceptance Integration Suite (`test/integration/e2e_bulk_buying_lifecycle_test.dart`):
+- [x] Flutter Unified Acceptance Integration Suite (`test/integration/e2e_bulk_buying_lifecycle_test.dart`):
   - Simulates the full customer lifecycle inside Flutter app widgets with Riverpod:
     - Customer mobile OTP authentication and profile setup.
     - Digital wallet deposit via bKash dialog and available balance update.
@@ -36,5 +36,5 @@
     - Campaign settlement state updates reflecting `CONFIRMED` deal and `DISPATCHED` courier status with tracking pill.
     - Admin dashboard access, metrics inspection, deal scheduler form submission, and withdrawal payout review.
 
-- [ ] Smoke & Regression Suite Verification:
+- [x] Smoke & Regression Suite Verification:
   - All unit, widget, and E2E acceptance tests pass cleanly without race conditions or memory leaks.

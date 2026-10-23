@@ -101,7 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: RoutePaths.admin,
-        builder: (context, state) => const AdminScreen(),
+        builder: (context, state) => const ScaffoldMessenger(child: AdminScreen()),
       ),
     ],
   );

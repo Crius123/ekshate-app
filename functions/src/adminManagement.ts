@@ -462,7 +462,7 @@ export async function executeGetAdminOperationalMetrics(
       gmv += amount;
     }
 
-    if (status === 'pending_escrow') {
+    if (status === 'pending_escrow' || status === 'pending_bucket' || status === 'pending') {
       escrowVolume += amount;
       pendingEscrowOrdersCount++;
     } else if (status === 'confirmed') {

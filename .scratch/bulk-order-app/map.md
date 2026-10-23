@@ -36,9 +36,11 @@ Destination: Complete architectural and domain specification (`spec.md`), Firest
   - Customer Wallet Withdrawal & Payout queue with filter chips, account details, atomic wallet balance debiting, and write-once ledger accounting (`type: withdrawal_payout`).
   - Comprehensive unit and integration test suites passing across TypeScript and Flutter.
 
+- [16-end-to-end-lifecycle-acceptance-and-smoke-suite.md](issues/16-end-to-end-lifecycle-acceptance-and-smoke-suite.md): Comprehensive end-to-end (E2E) cross-lifecycle acceptance suite executing the complete customer, community, and operator journey across all 15 discrete system modules (`functions/src/test/e2eLifecycle.test.ts` and `test/integration/e2e_bulk_buying_lifecycle_test.dart`) covering deal scheduling, onboarding, bKash/SSLCommerz deposits, clamped bulk ordering, urgency alerts, bucket rollover, midnight settlement reconciliation, procurement manifest generation, multi-courier dispatch, and operator withdrawal payout reviews with 100% test pass rate.
+
 ## Next ready issue
 
-- [16-end-to-end-lifecycle-acceptance-and-smoke-suite.md](issues/16-end-to-end-lifecycle-acceptance-and-smoke-suite.md): Comprehensive end-to-end (E2E) cross-lifecycle acceptance suite executing the complete customer, community, and operator journey across all 15 discrete system modules (scheduling, onboarding, deposits, clamped bulk buying, urgency alerts, rollover, midnight settlement, procurement manifest, courier dispatch, and withdrawal payout).
+- All 16 milestone issues completed! Platform fully specified, implemented, and verified with complete smoke and acceptance test suites.
 
 ## Out of scope
 

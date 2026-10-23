@@ -328,13 +328,14 @@ class WithdrawalPayoutsTab extends ConsumerWidget {
             key: const Key('confirm_approve_payout_button'),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
             onPressed: () async {
+              final messenger = ScaffoldMessenger.maybeOf(context);
               Navigator.of(ctx).pop();
               final success = await ref.read(adminActionControllerProvider.notifier).reviewWithdrawal(
                     requestId: request.id,
                     action: 'approve',
                   );
-              if (context.mounted && success) {
-                ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              if (success) {
+                messenger?.showSnackBar(
                   SnackBar(
                     content: Text('Payout for ${request.formattedAmount} approved and ledger recorded!'),
                     backgroundColor: const Color(0xFF10B981),
@@ -386,14 +387,15 @@ class WithdrawalPayoutsTab extends ConsumerWidget {
               final reason = reasonController.text.trim();
               if (reason.isEmpty) return;
 
+              final messenger = ScaffoldMessenger.maybeOf(context);
               Navigator.of(ctx).pop();
               final success = await ref.read(adminActionControllerProvider.notifier).reviewWithdrawal(
                     requestId: request.id,
                     action: 'reject',
                     rejectionReason: reason,
                   );
-              if (context.mounted && success) {
-                ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              if (success) {
+                messenger?.showSnackBar(
                   const SnackBar(
                     content: Text('Withdrawal request rejected.'),
                     backgroundColor: Colors.redAccent,
