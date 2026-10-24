@@ -25,7 +25,7 @@ void main() {
       expect(timerInfo.remaining.inMinutes, 90);
     });
 
-    test('calculates active ordering countdown correctly (after 10:00 AM BDT)', () {
+    test('calculates active countdown correctly (after 10:00 AM BDT)', () {
       // 14:00:00 BDT -> 9 hours 59 minutes remaining to 23:59:00 BDT
       final bdtTime = DateTime(2026, 10, 22, 14, 0, 0);
       final timerInfo = calculateCampaignTimerInfo(bdtTime);
@@ -33,7 +33,7 @@ void main() {
       expect(timerInfo.isPreview, isFalse);
       expect(timerInfo.isActive, isTrue);
       expect(timerInfo.phase, CampaignPhase.active);
-      expect(timerInfo.phaseLabel, 'Active Ordering');
+      expect(timerInfo.phaseLabel, 'Active');
       expect(timerInfo.targetLabel, 'Countdown to 11:59 PM BDT');
       expect(timerInfo.hours, '09');
       expect(timerInfo.minutes, '59');
@@ -60,7 +60,7 @@ void main() {
       final timerInfo = calculateCampaignTimerInfo(bdtTime, overrideStatus: 'active');
 
       expect(timerInfo.isActive, isTrue);
-      expect(timerInfo.phaseLabel, 'Active Ordering');
+      expect(timerInfo.phaseLabel, 'Active');
       expect(timerInfo.targetLabel, 'Countdown to 11:59 PM BDT');
       // 23:59 - 08:00 = 15 hours 59 minutes
       expect(timerInfo.hours, '15');
@@ -121,14 +121,14 @@ void main() {
       expect(find.text('00'), findsOneWidget); // 00 sec remaining
     });
 
-    testWidgets('renders Active Ordering header with Countdown to 11:59 PM BDT', (tester) async {
+    testWidgets('renders Active header with Countdown to 11:59 PM BDT', (tester) async {
       final fixedTime = DateTime(2026, 10, 22, 14, 0, 0);
       await tester.pumpWidget(buildHeaderWidget(fixedBdtTime: fixedTime, status: 'active'));
       await tester.pumpAndSettle();
 
       // Check Title and Status Badge
       expect(find.text('Daily Bulk Campaign'), findsOneWidget);
-      expect(find.text('Active Ordering'), findsOneWidget);
+      expect(find.text('Active'), findsOneWidget);
 
       // Check Dynamic Target Label
       expect(find.text('Countdown to 11:59 PM BDT'), findsOneWidget);
@@ -161,7 +161,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Starts in active by default in controller
-      expect(find.text('Active Ordering'), findsOneWidget);
+      expect(find.text('Active'), findsOneWidget);
       expect(find.text('Countdown to 11:59 PM BDT'), findsOneWidget);
 
       // Switch to preview mode

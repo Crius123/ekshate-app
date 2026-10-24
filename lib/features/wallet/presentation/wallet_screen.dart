@@ -37,7 +37,7 @@ class WalletScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Wallet & Escrow', style: theme.textTheme.h4),
+        title: Text('My Wallet', style: theme.textTheme.h4),
         actions: [
           const NotificationBellButton(),
           if (profile != null)
@@ -227,7 +227,7 @@ class WalletScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
 
-              // Escrow Balance Card (Amber)
+              // Escrow / Reserved Balance Card (Amber)
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(18),
@@ -245,7 +245,7 @@ class WalletScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Escrow Balance',
+                            'Reserved Balance',
                             style: theme.textTheme.small.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.amberEscrow,
@@ -272,7 +272,7 @@ class WalletScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Locked in active batch deals',
+                        'Held for active group orders',
                         style: theme.textTheme.muted.copyWith(
                           fontSize: 11,
                           color: AppColors.textMuted,
@@ -312,7 +312,7 @@ class WalletScreen extends ConsumerWidget {
             description: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                'Instant deposits backed by write-once ledger idempotency via bKash Tokenized Checkout or SSLCommerz.',
+                'Instant, secure deposits via bKash Tokenized Checkout or SSLCommerz with 100% money-back guarantee.',
                 style: theme.textTheme.muted,
               ),
             ),
@@ -337,11 +337,11 @@ class WalletScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Audit Ledger Header and Filter Chips
+          // Transaction History Header and Filter Chips
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Transaction Audit Ledger', style: theme.textTheme.h4),
+              Text('Transaction History', style: theme.textTheme.h4),
               Text(
                 '${transactions.length} record${transactions.length == 1 ? '' : 's'}',
                 style: theme.textTheme.muted,
@@ -359,7 +359,7 @@ class WalletScreen extends ConsumerWidget {
                 const SizedBox(width: 6),
                 _buildFilterChip(ref, 'top_up', 'Deposits'),
                 const SizedBox(width: 6),
-                _buildFilterChip(ref, 'order_hold', 'Escrow Holds'),
+                _buildFilterChip(ref, 'order_hold', 'On Hold'),
                 const SizedBox(width: 6),
                 _buildFilterChip(ref, 'order_settle', 'Settled'),
                 const SizedBox(width: 6),

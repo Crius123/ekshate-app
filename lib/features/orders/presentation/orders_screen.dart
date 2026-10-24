@@ -87,7 +87,7 @@ class OrdersScreen extends ConsumerWidget {
                       context: context,
                       ref: ref,
                       tab: OrderFilterTab.activeEscrow,
-                      label: 'Active Escrow (Pending)',
+                      label: 'Pending Orders',
                       count: counts[OrderFilterTab.activeEscrow] ?? 0,
                       isSelected: selectedTab == OrderFilterTab.activeEscrow,
                       badgeColor: AppColors.amberEscrow,
@@ -223,8 +223,8 @@ class OrdersScreen extends ConsumerWidget {
 
     switch (tab) {
       case OrderFilterTab.activeEscrow:
-        title = 'No Pending Escrow Orders';
-        description = 'You have no orders currently waiting in open buckets.';
+        title = 'No Pending Orders';
+        description = 'You have no orders currently waiting in open groups.';
         icon = LucideIcons.hourglass;
         break;
       case OrderFilterTab.confirmed:
@@ -239,7 +239,7 @@ class OrdersScreen extends ConsumerWidget {
         break;
       case OrderFilterTab.refunded:
         title = 'No Refunded Deals';
-        description = 'Batches that did not reach MOQ before midnight will show here with restored escrow.';
+        description = 'Group orders that did not reach the target before midnight will show here with refunded payments.';
         icon = LucideIcons.rotateCcw;
         break;
     }
@@ -419,7 +419,7 @@ class _OrderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      order.isDispatched ? 'Total Paid' : 'Total Escrow Held',
+                      order.isDispatched ? 'Total Paid' : (order.isPending ? 'Amount on Hold' : 'Total Amount'),
                       style: theme.textTheme.muted.copyWith(fontSize: 11, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 4),
@@ -671,7 +671,7 @@ class _OrderCard extends StatelessWidget {
           border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
         ),
         child: const Text(
-          'PENDING ESCROW',
+          'PENDING',
           style: TextStyle(
             color: Color(0xFFF59E0B),
             fontSize: 11,

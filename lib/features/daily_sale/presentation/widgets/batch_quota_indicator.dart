@@ -8,12 +8,14 @@ class BatchQuotaIndicator extends StatelessWidget {
   final BatchBucket bucket;
   final String unit;
   final bool showBucketBadge;
+  final bool showRemainingInfo;
 
   const BatchQuotaIndicator({
     super.key,
     required this.bucket,
     required this.unit,
     this.showBucketBadge = true,
+    this.showRemainingInfo = false,
   });
 
   @override
@@ -35,20 +37,25 @@ class BatchQuotaIndicator extends StatelessWidget {
                 children: [
                   const Icon(LucideIcons.users, size: 14, color: Color(0xFF10B981)),
                   const SizedBox(width: 6),
-                  Text(
-                    '${bucket.currentQuantity.toStringAsFixed(0)}/${bucket.moqThreshold.toStringAsFixed(0)} $unit ordered',
-                    style: theme.textTheme.small.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      '${bucket.currentQuantity.toStringAsFixed(0)}/${bucket.moqThreshold.toStringAsFixed(0)} $unit ordered',
+                      style: theme.textTheme.small.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-            if (showBucketBadge)
+            if (showBucketBadge) ...[
+              const SizedBox(width: 4),
               ShadBadge(
                 key: Key('bucket_badge_${bucket.bucketNumber}'),
                 child: Text('Bucket #${bucket.bucketNumber}'),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 6),
@@ -64,28 +71,33 @@ class BatchQuotaIndicator extends StatelessWidget {
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
           ),
         ),
-        const SizedBox(height: 6),
 
-        // Quota Target Met or Remaining Info
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$percentText% MOQ reached',
-              style: theme.textTheme.muted.copyWith(fontSize: 11),
-            ),
-            Text(
-              isTargetMet
-                  ? '🎯 Target Met! Rollover Active'
-                  : '${bucket.remainingCapacity.toStringAsFixed(0)} $unit remaining',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isTargetMet ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+        // Quota Target Met or Remaining Info (optional)
+        if (showRemainingInfo) ...[
+          const SizedBox(height: 6),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 4,
+            runSpacing: 2,
+            children: [
+              Text(
+                '$percentText% MOQ reached',
+                style: theme.textTheme.muted.copyWith(fontSize: 11),
               ),
-            ),
-          ],
-        ),
+              Text(
+                isTargetMet
+                    ? '🎯 Target Met! Rollover Active'
+                    : '${bucket.remainingCapacity.toStringAsFixed(0)} $unit remaining',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isTargetMet ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

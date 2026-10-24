@@ -30,7 +30,7 @@ void main() {
     );
   });
 
-  testWidgets('NotificationBellButton displays unread badge and navigates on tap', (tester) async {
+  testWidgets('NotificationBellButton displays unread badge and opens ShadSelect on current page', (tester) async {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -65,11 +65,16 @@ void main() {
     expect(find.byType(NotificationBellButton), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
 
-    // Tap bell button
+    // Tap bell button to open ShadSelect dropdown in-place
     await tester.tap(find.byType(NotificationBellButton));
     await tester.pumpAndSettle();
 
-    // Navigates to NotificationsScreen
-    expect(find.byType(NotificationsScreen), findsOneWidget);
+    // Stays on the current page (does NOT navigate to NotificationsScreen)
+    expect(find.byType(NotificationsScreen), findsNothing);
+
+    // Shows notifications header inside the dropdown select
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('2 new'), findsOneWidget);
+    expect(find.text('Mark all as read'), findsOneWidget);
   });
 }

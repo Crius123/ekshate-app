@@ -7,7 +7,7 @@ import 'package:ekshate_app/features/daily_sale/presentation/daily_sale_controll
 
 /// Campaign header displaying dynamic countdown timers synchronized to campaign windows:
 /// - Preview Mode: Countdown to 10:00 AM BDT
-/// - Active Ordering: Countdown to 11:59 PM BDT
+/// - Active: Countdown to 11:59 PM BDT
 class CampaignCountdownHeader extends ConsumerStatefulWidget {
   final bool autoTick;
 
@@ -131,7 +131,7 @@ class _CampaignCountdownHeaderState
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      timerInfo.phaseLabel, // 'Preview Mode' or 'Active Ordering'
+                      timerInfo.phaseLabel, // 'Preview Mode' or 'Active'
                       style: TextStyle(
                         color: primaryAccent,
                         fontWeight: FontWeight.bold,

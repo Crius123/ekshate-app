@@ -75,7 +75,7 @@ void main() {
       expect(find.text('🔥 Almost Unlocked!'), findsOneWidget);
       expect(find.text('🎉 MOQ Target Met!'), findsOneWidget);
       expect(find.text('🚚 Dispatched via PATHAO!'), findsOneWidget);
-      expect(find.text('💸 100% Escrow Refunded!'), findsOneWidget);
+      expect(find.text('💸 100% Refund Returned!'), findsOneWidget);
     });
 
     testWidgets('filtering by tabs updates the displayed list accurately', (tester) async {
@@ -89,14 +89,14 @@ void main() {
 
       expect(find.text('🎉 MOQ Target Met!'), findsOneWidget);
       expect(find.text('🚚 Dispatched via PATHAO!'), findsOneWidget);
-      expect(find.text('💸 100% Escrow Refunded!'), findsNothing);
+      expect(find.text('💸 100% Refund Returned!'), findsNothing);
       expect(find.text('🔥 Almost Unlocked!'), findsNothing);
 
       // 2. Tap Wallet tab
       await tester.tap(find.text('Wallet'));
       await tester.pumpAndSettle();
 
-      expect(find.text('💸 100% Escrow Refunded!'), findsOneWidget);
+      expect(find.text('💸 100% Refund Returned!'), findsOneWidget);
       expect(find.text('🎉 MOQ Target Met!'), findsNothing);
       expect(find.text('🔥 Almost Unlocked!'), findsNothing);
 
@@ -105,7 +105,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('🔥 Almost Unlocked!'), findsOneWidget);
-      expect(find.text('💸 100% Escrow Refunded!'), findsNothing);
+      expect(find.text('💸 100% Refund Returned!'), findsNothing);
     });
 
     testWidgets('tapping Mark all as read updates unread counter and dismisses new badge', (tester) async {
@@ -134,7 +134,7 @@ void main() {
 
       expect(find.text('Push Preferences'), findsWidgets);
       expect(find.text('Order & Courier Tracking'), findsOneWidget);
-      expect(find.text('Wallet & Escrow Receipts'), findsOneWidget);
+      expect(find.text('Wallet & Payment Receipts'), findsOneWidget);
       expect(find.text('Community Urgency Drops'), findsOneWidget);
 
       // Verify switches exist and are interactive

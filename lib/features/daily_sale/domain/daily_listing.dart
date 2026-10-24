@@ -17,6 +17,8 @@ class DailyListing {
   final String? imageUrl;
   final String? category;
   final String? description;
+  final String? origin;
+  final List<String>? highlights;
 
   const DailyListing({
     required this.id,
@@ -35,6 +37,8 @@ class DailyListing {
     this.imageUrl,
     this.category,
     this.description,
+    this.origin,
+    this.highlights,
   });
 
   double get savingsPerUnit => marketPrice - unitPrice;
@@ -56,6 +60,8 @@ class DailyListing {
     String? imageUrl,
     String? category,
     String? description,
+    String? origin,
+    List<String>? highlights,
   }) {
     return DailyListing(
       id: id ?? this.id,
@@ -74,6 +80,8 @@ class DailyListing {
       imageUrl: imageUrl ?? this.imageUrl,
       category: category ?? this.category,
       description: description ?? this.description,
+      origin: origin ?? this.origin,
+      highlights: highlights ?? this.highlights,
     );
   }
 }

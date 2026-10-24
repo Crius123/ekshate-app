@@ -41,12 +41,12 @@ void main() {
       // App bar & Campaign Header
       expect(find.text('Ekshate'), findsOneWidget);
       expect(find.text('Daily Bulk Campaign'), findsOneWidget);
-      expect(find.text('Active Ordering'), findsWidgets);
+      expect(find.text('Active'), findsWidgets);
       expect(find.text('Countdown to 11:59 PM BDT'), findsOneWidget);
 
       // Section title
       expect(find.text('Active Wholesale Deals'), findsOneWidget);
-      expect(find.text('3 Deals Live'), findsOneWidget);
+      expect(find.text('12 Deals Live'), findsOneWidget);
 
       // Deals rendered
       expect(find.text('Nagpur Oranges (1 kg)'), findsOneWidget);
@@ -98,9 +98,9 @@ void main() {
         const Color(0xFF10B981), // Emerald progress color
       );
 
-      // Quota percent info
-      expect(find.text('65% MOQ reached'), findsOneWidget);
-      expect(find.text('35 kg remaining'), findsOneWidget);
+      // Quota percent and remaining info is omitted on compact cards per craft design
+      expect(find.text('65% MOQ reached'), findsNothing);
+      expect(find.text('35 kg remaining'), findsNothing);
     });
 
     testWidgets('updates subtotal dynamically when quantity selector increments', (tester) async {

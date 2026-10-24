@@ -7,7 +7,7 @@ enum CampaignPhase {
 
 class CampaignTimerInfo {
   final CampaignPhase phase;
-  final String phaseLabel; // e.g. 'Preview Mode' or 'Active Ordering'
+  final String phaseLabel; // e.g. 'Preview Mode' or 'Active'
   final String targetLabel; // e.g. 'Countdown to 10:00 AM BDT' or 'Countdown to 11:59 PM BDT'
   final Duration remaining;
   final String hours;
@@ -35,7 +35,7 @@ class CampaignTimerInfo {
 /// Calculates countdown timer state based on Bangladesh Standard Time (BDT / UTC+6).
 ///
 /// Preview Mode window: 12:00 AM – 10:00 AM BDT (Countdown to 10:00 AM BDT).
-/// Active Ordering window: 10:00 AM – 11:59 PM BDT (Countdown to 11:59 PM BDT).
+/// Active window: 10:00 AM – 11:59 PM BDT (Countdown to 11:59 PM BDT).
 CampaignTimerInfo calculateCampaignTimerInfo(
   DateTime bdtNow, {
   String? overrideStatus,
@@ -77,7 +77,7 @@ CampaignTimerInfo calculateCampaignTimerInfo(
     progressPercent = ((windowSeconds - diffSeconds) / windowSeconds).clamp(0.0, 1.0);
   } else {
     phase = CampaignPhase.active;
-    phaseLabel = 'Active Ordering';
+    phaseLabel = 'Active';
     targetLabel = 'Countdown to 11:59 PM BDT';
 
     // Target is 11:59:00 PM today

@@ -50,7 +50,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check header
-      expect(find.text('Wallet & Escrow'), findsOneWidget);
+      expect(find.text('My Wallet'), findsOneWidget);
 
       // Check Available Balance Card
       expect(find.text('Available Balance'), findsOneWidget);
@@ -58,9 +58,9 @@ void main() {
       expect(find.text('Free for orders & withdraw'), findsOneWidget);
 
       // Check Escrow Balance Card
-      expect(find.text('Escrow Balance'), findsOneWidget);
+      expect(find.text('Reserved Balance'), findsOneWidget);
       expect(find.text('৳1800'), findsOneWidget);
-      expect(find.text('Locked in active batch deals'), findsOneWidget);
+      expect(find.text('Held for active group orders'), findsOneWidget);
     });
 
     testWidgets('renders customer profile information and sign out action', (tester) async {
@@ -89,13 +89,13 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Transaction Audit Ledger'), findsOneWidget);
+      expect(find.text('Transaction History'), findsOneWidget);
 
       // All 4 categories rendered
       expect(find.text('Deposit (BKASH)'), findsOneWidget);
-      expect(find.text('Batch Order Escrow'), findsOneWidget);
-      expect(find.text('Batch Order Settled'), findsOneWidget);
-      expect(find.text('Failed Bucket Refund'), findsOneWidget);
+      expect(find.text('Order Payment Hold'), findsOneWidget);
+      expect(find.text('Order Completed'), findsOneWidget);
+      expect(find.text('Order Refund'), findsOneWidget);
 
       // Check formatted amounts
       expect(find.text('+৳10000'), findsOneWidget);
@@ -121,29 +121,29 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Deposit (BKASH)'), findsOneWidget);
-      expect(find.text('Batch Order Escrow'), findsNothing);
-      expect(find.text('Batch Order Settled'), findsNothing);
-      expect(find.text('Failed Bucket Refund'), findsNothing);
+      expect(find.text('Order Payment Hold'), findsNothing);
+      expect(find.text('Order Completed'), findsNothing);
+      expect(find.text('Order Refund'), findsNothing);
 
-      // Tap 'Escrow Holds' filter
-      await tester.tap(find.text('Escrow Holds'));
+      // Tap 'On Hold' filter
+      await tester.tap(find.text('On Hold'));
       await tester.pumpAndSettle();
 
       expect(find.text('Deposit (BKASH)'), findsNothing);
-      expect(find.text('Batch Order Escrow'), findsOneWidget);
+      expect(find.text('Order Payment Hold'), findsOneWidget);
 
       // Tap 'Refunds' filter
       await tester.tap(find.text('Refunds'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Failed Bucket Refund'), findsOneWidget);
+      expect(find.text('Order Refund'), findsOneWidget);
 
       // Reset to 'All'
       await tester.tap(find.text('All'));
       await tester.pumpAndSettle();
 
       expect(find.text('Deposit (BKASH)'), findsOneWidget);
-      expect(find.text('Failed Bucket Refund'), findsOneWidget);
+      expect(find.text('Order Refund'), findsOneWidget);
     });
 
     testWidgets('tapping bKash Top-up opens DepositModal and triggers bKash Tokenized Checkout flow', (tester) async {

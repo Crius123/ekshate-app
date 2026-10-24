@@ -185,7 +185,7 @@ class NotificationsScreen extends ConsumerWidget {
       case NotificationCategory.wallet:
         emptyIcon = LucideIcons.wallet;
         emptyTitle = 'No Wallet Receipts';
-        emptySubtitle = 'Escrow refunds and deposit receipts will appear here.';
+        emptySubtitle = 'Refunds and deposit receipts will appear here.';
         break;
       case NotificationCategory.communityDrops:
         emptyIcon = LucideIcons.flame;

@@ -52,7 +52,7 @@ class OrderEntity {
     if (isDispatched) return 'DISPATCHED';
     if (isConfirmed) return 'CONFIRMED';
     if (isRefunded) return 'REFUNDED';
-    return 'PENDING ESCROW';
+    return 'PENDING';
   }
 
   String get statusExplanation {
@@ -64,9 +64,9 @@ class OrderEntity {
       return 'Bucket met MOQ and order is queued for morning procurement.';
     }
     if (isRefunded) {
-      return 'Bucket did not meet MOQ and escrow was restored to available balance.';
+      return 'Group did not meet target MOQ and payment was refunded to your available balance.';
     }
-    return 'Funds are held securely until bucket hits MOQ.';
+    return 'Payment is held safely until the group reaches its wholesale target.';
   }
 
   String get liveBucketTooltipText {
@@ -78,9 +78,9 @@ class OrderEntity {
       return 'Bucket #$bucketNumber met MOQ and order is queued for morning procurement.';
     }
     if (isRefunded) {
-      return 'Bucket #$bucketNumber did not meet MOQ and escrow was restored to available balance.';
+      return 'Bucket #$bucketNumber did not meet target MOQ and payment was refunded to your available balance.';
     }
-    return 'Funds are held securely until bucket hits MOQ.';
+    return 'Payment is held safely until the group reaches its wholesale target.';
   }
 
   OrderEntity copyWith({

@@ -90,7 +90,7 @@ class MockNotificationsRepository implements NotificationsRepository {
       NotificationItem(
         id: 'notif_seed_04',
         userId: 'user_dev_01',
-        title: '💸 100% Escrow Refunded!',
+        title: '💸 100% Refund Returned!',
         body: '৳1,800 returned to your available balance as the MOQ target was not met.',
         category: NotificationCategory.wallet,
         isRead: true,

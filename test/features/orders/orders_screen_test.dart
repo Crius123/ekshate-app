@@ -74,7 +74,7 @@ void main() {
       expect(find.textContaining('Midnight Settlement (11:59 PM BDT)'), findsOneWidget);
 
       // Filter tabs
-      expect(find.text('Active Escrow (Pending)'), findsOneWidget);
+      expect(find.text('Pending Orders'), findsOneWidget);
       expect(find.text('Confirmed Deals'), findsOneWidget);
       expect(find.text('Dispatched (In Transit)'), findsOneWidget);
       expect(find.text('Refunded Deals'), findsOneWidget);
@@ -93,7 +93,7 @@ void main() {
       expect(find.text('Nagpur Oranges (1 kg)'), findsOneWidget);
 
       // Status Badge
-      expect(find.text('PENDING ESCROW'), findsOneWidget);
+      expect(find.text('PENDING'), findsOneWidget);
 
       // Allocated Bucket & Info
       expect(find.text('Allocated Bucket #1'), findsOneWidget);
@@ -101,14 +101,14 @@ void main() {
       // Quantity & Total Escrow
       expect(find.text('Quantity Ordered'), findsOneWidget);
       expect(find.text('10 kg'), findsOneWidget);
-      expect(find.text('Total Escrow Held'), findsOneWidget);
+      expect(find.text('Amount on Hold'), findsOneWidget);
       expect(find.text('৳1800'), findsOneWidget);
 
       // Delivery Destination
       expect(find.text('Delivery: House 12, Road 5, Dhanmondi, Dhaka'), findsOneWidget);
 
       // Explanatory Banner
-      expect(find.text('Funds are held securely until bucket hits MOQ.'), findsOneWidget);
+      expect(find.text('Payment is held safely until the group reaches its wholesale target.'), findsOneWidget);
     });
 
     testWidgets('tapping Confirmed Deals tab filters and displays confirmed order with emerald badge', (tester) async {
@@ -256,7 +256,7 @@ void main() {
       expect(find.text('REFUNDED'), findsOneWidget);
       expect(find.text('2 jar'), findsOneWidget);
       expect(find.text('৳1560'), findsOneWidget);
-      expect(find.text('Bucket did not meet MOQ and escrow was restored to available balance.'), findsOneWidget);
+      expect(find.text('Group did not meet target MOQ and payment was refunded to your available balance.'), findsOneWidget);
 
       // Should NOT show pending or confirmed orders in this tab
       expect(find.text('Nagpur Oranges (1 kg)'), findsNothing);
@@ -279,8 +279,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Empty state for Active Escrow
-      expect(find.text('No Pending Escrow Orders'), findsOneWidget);
-      expect(find.text('You have no orders currently waiting in open buckets.'), findsOneWidget);
+      expect(find.text('No Pending Orders'), findsOneWidget);
+      expect(find.text('You have no orders currently waiting in open groups.'), findsOneWidget);
 
       // Tap Confirmed Deals
       await tester.tap(find.text('Confirmed Deals'));

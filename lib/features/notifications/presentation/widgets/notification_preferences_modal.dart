@@ -89,15 +89,15 @@ class NotificationPreferencesModal extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Toggle 2: Wallet & Escrow Alerts
+            // Toggle 2: Wallet & Payment Alerts
             _buildPreferenceTile(
               context,
               theme: theme,
               icon: LucideIcons.walletCards,
               iconColor: const Color(0xFF059669),
-              title: 'Wallet & Escrow Receipts',
+              title: 'Wallet & Payment Receipts',
               description:
-                  'Instant 100% escrow refunds at midnight and balance top-up receipts.',
+                  'Instant 100% refunds at midnight and balance top-up receipts.',
               value: prefs.walletAlerts,
               onChanged: (val) => notifier.toggleWalletAlerts(val),
             ),

@@ -32,59 +32,65 @@ class CapacityQuantitySelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          runSpacing: 4,
           children: [
-            // Minus Button
-            ShadButton.outline(
-              key: const Key('capacity_qty_minus'),
-              size: ShadButtonSize.sm,
-              enabled: !isAtMinCapacity,
-              onPressed: () {
-                if (currentQuantity > minQuantity) {
-                  final nextQty = (currentQuantity - step).clamp(minQuantity, remainingCapacity);
-                  onQuantityChanged(nextQty);
-                }
-              },
-              child: const Icon(LucideIcons.minus, size: 14),
-            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Minus Button
+                ShadButton.outline(
+                  key: const Key('capacity_qty_minus'),
+                  size: ShadButtonSize.sm,
+                  enabled: !isAtMinCapacity,
+                  onPressed: () {
+                    if (currentQuantity > minQuantity) {
+                      final nextQty = (currentQuantity - step).clamp(minQuantity, remainingCapacity);
+                      onQuantityChanged(nextQty);
+                    }
+                  },
+                  child: const Icon(LucideIcons.minus, size: 14),
+                ),
 
-            // Micro-animated Quantity Display
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                transitionBuilder: (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                child: Text(
-                  '${currentQuantity.toStringAsFixed(0)} $unit',
-                  key: ValueKey('qty_${currentQuantity}_$unit'),
-                  style: theme.textTheme.large.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
+                // Micro-animated Quantity Display
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 150),
+                    transitionBuilder: (child, animation) {
+                      return ScaleTransition(
+                        scale: animation,
+                        child: FadeTransition(opacity: animation, child: child),
+                      );
+                    },
+                    child: Text(
+                      '${currentQuantity.toStringAsFixed(0)} $unit',
+                      key: ValueKey('qty_${currentQuantity}_$unit'),
+                      style: theme.textTheme.large.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // Plus Button
-            ShadButton.outline(
-              key: const Key('capacity_qty_plus'),
-              size: ShadButtonSize.sm,
-              enabled: !isAtMaxCapacity,
-              onPressed: () {
-                if (currentQuantity < remainingCapacity) {
-                  final nextQty = (currentQuantity + step).clamp(minQuantity, remainingCapacity);
-                  onQuantityChanged(nextQty);
-                }
-              },
-              child: const Icon(LucideIcons.plus, size: 14),
+                // Plus Button
+                ShadButton.outline(
+                  key: const Key('capacity_qty_plus'),
+                  size: ShadButtonSize.sm,
+                  enabled: !isAtMaxCapacity,
+                  onPressed: () {
+                    if (currentQuantity < remainingCapacity) {
+                      final nextQty = (currentQuantity + step).clamp(minQuantity, remainingCapacity);
+                      onQuantityChanged(nextQty);
+                    }
+                  },
+                  child: const Icon(LucideIcons.plus, size: 14),
+                ),
+              ],
             ),
-
-            const SizedBox(width: 12),
 
             // Quick Preset / Max Chip
             if (!hasNoCapacity && remainingCapacity > 1) ...[
@@ -153,12 +159,15 @@ class CapacityQuantitySelector extends StatelessWidget {
             color: color,
           ),
           const SizedBox(width: 6),
-          Text(
-            message,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

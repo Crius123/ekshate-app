@@ -84,11 +84,11 @@ class WalletTransaction {
             ? 'Deposit (${gateway!.toUpperCase()})'
             : 'Deposit';
       case 'order_hold':
-        return 'Batch Order Escrow';
+        return 'Order Payment Hold';
       case 'order_settle':
-        return 'Batch Order Settled';
+        return 'Order Completed';
       case 'order_refund':
-        return 'Failed Bucket Refund';
+        return 'Order Refund';
       default:
         return type.replaceAll('_', ' ').toUpperCase();
     }
