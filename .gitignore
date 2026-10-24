@@ -25,3 +25,9 @@ ios/Flutter/Generated.xcconfig
 ios/Flutter/app.framework
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
+
+# Executables & Local Tool Cache
+*.exe
+.agent/
+.codex/
+.impeccable/
