@@ -68,6 +68,10 @@ void main() {
           builder: (context, state) => const Scaffold(body: Text('Orders Screen Destination')),
         ),
         GoRoute(
+          path: RoutePaths.checkout,
+          builder: (context, state) => const Scaffold(body: Text('Checkout Screen Destination')),
+        ),
+        GoRoute(
           path: RoutePaths.dailySale,
           builder: (context, state) => const Scaffold(body: Text('Daily Sale Screen Destination')),
         ),
@@ -156,11 +160,12 @@ void main() {
       // Verify summary contrast
       expect(find.text('Customer Available Balance:'), findsOneWidget);
       expect(find.text('৳5000'), findsOneWidget);
-      expect(find.text('Total Escrow Required:'), findsOneWidget);
+      expect(find.text('Total Order Amount:'), findsOneWidget);
 
-      // Verify checkout button enabled
-      final checkoutBtn = find.byKey(const Key('confirm_escrow_funds_btn'));
+      // Verify proceed to checkout button enabled
+      final checkoutBtn = find.byKey(const Key('proceed_to_checkout_btn'));
       expect(checkoutBtn, findsOneWidget);
+      expect(find.textContaining('Proceed to Checkout'), findsOneWidget);
     });
 
     testWidgets('volume stepper increments and decrements quantity and recalculates totals', (tester) async {
@@ -266,9 +271,9 @@ void main() {
       expect(bkashBtn, findsOneWidget);
       expect(find.text('Top-up ৳1300 via bKash'), findsOneWidget);
 
-      // Verify Confirm & Escrow Funds button is disabled
-      final confirmBtn = tester.widget<ShadButton>(find.byKey(const Key('confirm_escrow_funds_btn')));
-      expect(confirmBtn.enabled, isFalse);
+      // Verify Proceed to Checkout button is enabled
+      final proceedBtn = tester.widget<ShadButton>(find.byKey(const Key('proceed_to_checkout_btn')));
+      expect(proceedBtn.enabled, isTrue);
 
       // Tap 1-tap bKash button opens DepositModal
       await tester.tap(bkashBtn);
@@ -278,7 +283,7 @@ void main() {
       expect(find.text('1300'), findsOneWidget); // Pre-filled with deficit amount!
     });
 
-    testWidgets('tapping "Confirm & Escrow Funds" executes atomic checkout, clears cart, and redirects to orders', (tester) async {
+    testWidgets('tapping "Proceed to Checkout" navigates to /checkout screen', (tester) async {
       configureViewport(tester);
       await tester.pumpWidget(createSubject(initialAvailableBalance: 10000.0));
       await tester.pumpAndSettle();
@@ -315,18 +320,15 @@ void main() {
           );
       await tester.pumpAndSettle();
 
-      final confirmBtn = find.byKey(const Key('confirm_escrow_funds_btn'));
-      expect(confirmBtn, findsOneWidget);
+      final proceedBtn = find.byKey(const Key('proceed_to_checkout_btn'));
+      expect(proceedBtn, findsOneWidget);
 
-      // Tap Confirm & Escrow Funds
-      await tester.tap(confirmBtn);
+      // Tap Proceed to Checkout
+      await tester.tap(proceedBtn);
       await tester.pumpAndSettle();
 
-      // Redirected to orders tab
-      expect(find.text('Orders Screen Destination'), findsOneWidget);
-
-      // Cart must now be empty
-      expect(container.read(cartProvider), isEmpty);
+      // Redirected to checkout screen
+      expect(find.text('Checkout Screen Destination'), findsOneWidget);
     });
 
     testWidgets('tapping delete button removes item from cart', (tester) async {

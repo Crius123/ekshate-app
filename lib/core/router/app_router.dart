@@ -7,6 +7,7 @@ import '../errors/error_boundary_widget.dart';
 import '../../features/daily_sale/presentation/daily_sale_screen.dart';
 import '../../features/catalog/presentation/catalog_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/orders/presentation/orders_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -15,6 +16,8 @@ import '../../features/procurement/presentation/procurement_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/admin/presentation/admin_screen.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/daily_sale/presentation/product_details_screen.dart';
+import '../../features/daily_sale/presentation/category_products_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -85,6 +88,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
+        path: RoutePaths.checkout,
+        builder: (context, state) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: RoutePaths.login,
         builder: (context, state) => const LoginScreen(),
       ),
@@ -102,6 +110,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: RoutePaths.admin,
         builder: (context, state) => const ScaffoldMessenger(child: AdminScreen()),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RoutePaths.productDetails,
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return ProductDetailsScreen(listingId: id);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RoutePaths.categoryProducts,
+        builder: (context, state) {
+          final rawCategory = state.pathParameters['categoryName'] ?? '';
+          final categoryName = Uri.decodeComponent(rawCategory);
+          return CategoryProductsScreen(categoryName: categoryName);
+        },
       ),
     ],
   );

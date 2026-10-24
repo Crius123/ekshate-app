@@ -44,7 +44,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         const ShadToast(
           title: Text('🎉 Batch Order Placed!'),
           description: Text(
-            'Funds locked in escrow. Allocation confirmed in active community bucket.',
+            'Payment held safely. Allocation confirmed in active community group.',
           ),
         ),
       );
@@ -172,58 +172,64 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       ),
       body: cartItems.isEmpty
           ? Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24.0),
-                padding: const EdgeInsets.all(32.0),
-                decoration: AppDecorations.glassCard(
-                  surfaceColor: AppColors.cardSurface,
-                  borderColor: AppColors.borderSubtle,
-                  borderRadius: 20,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.emerald.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                  padding: const EdgeInsets.all(32.0),
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  decoration: AppDecorations.glassCard(
+                    surfaceColor: AppColors.cardSurface,
+                    borderColor: AppColors.borderSubtle,
+                    borderRadius: 20,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.emerald.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.shoppingBag, size: 48, color: AppColors.emerald),
                       ),
-                      child: const Icon(LucideIcons.shoppingBag, size: 48, color: AppColors.emerald),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Your batch cart is empty',
-                      style: theme.textTheme.h4.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                      const SizedBox(height: 20),
+                      Text(
+                        'Your batch cart is empty',
+                        style: theme.textTheme.h4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Select items from today\'s active campaign wholesale drops',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.muted.copyWith(color: AppColors.textMuted),
-                    ),
-                    const SizedBox(height: 24),
-                    ShadButton(
-                      backgroundColor: AppColors.emerald,
-                      foregroundColor: Colors.white,
-                      onPressed: () => context.go(RoutePaths.dailySale),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.sparkles, size: 16),
-                          SizedBox(width: 8),
-                          Text(
-                            'Explore Wholesale Drops',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Select items from today\'s active campaign wholesale drops',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.muted.copyWith(color: AppColors.textMuted),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      ShadButton(
+                        backgroundColor: AppColors.emerald,
+                        foregroundColor: Colors.white,
+                        onPressed: () => context.go(RoutePaths.dailySale),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(LucideIcons.sparkles, size: 16),
+                            SizedBox(width: 8),
+                            Text(
+                              'Explore Wholesale Drops',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -286,100 +292,144 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         borderColor: AppColors.borderSubtle,
         borderRadius: 14,
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  item.productTitle,
-                  style: theme.textTheme.large.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              IconButton(
-                key: Key('cart_item_remove_${item.listingId}'),
-                icon: const Icon(LucideIcons.trash2, size: 18, color: Color(0xFFEF4444)),
-                tooltip: 'Remove',
-                onPressed: () {
-                  ref.read(cartProvider.notifier).removeItem(item.listingId);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '৳${item.unitPrice.toStringAsFixed(0)} / ${item.unit}',
-                style: theme.textTheme.muted.copyWith(color: AppColors.textMuted),
-              ),
-              Text(
-                '৳${item.totalAmount.toStringAsFixed(0)}',
-                style: theme.textTheme.h4.copyWith(
-                  color: AppColors.emerald,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const Divider(color: AppColors.borderSubtle, height: 22),
-          // Quantity Adjuster Stepper
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Allocated Volume (Max: ${item.maxAllowedCapacity.toStringAsFixed(0)} ${item.unit})',
-                style: theme.textTheme.small.copyWith(color: AppColors.textMuted),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    key: Key('cart_item_minus_${item.listingId}'),
-                    icon: const Icon(LucideIcons.minusCircle, size: 22),
-                    color: item.quantity > 1.0 ? AppColors.textPrimary : Colors.grey,
-                    onPressed: item.quantity > 1.0
-                        ? () {
-                            ref
-                                .read(cartProvider.notifier)
-                                .updateQuantity(item.listingId, item.quantity - 1.0);
-                          }
-                        : null,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      '${item.quantity.toStringAsFixed(0)} ${item.unit}',
-                      key: Key('cart_item_qty_${item.listingId}'),
-                      style: theme.textTheme.large.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+          // Product Image on the left-hand side
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 76,
+              height: 76,
+              color: const Color(0xFFF1F5F9),
+              child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      item.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: AppColors.emerald.withValues(alpha: 0.1),
+                        child: const Center(
+                          child: Icon(
+                            LucideIcons.shoppingBasket,
+                            size: 30,
+                            color: AppColors.emerald,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      color: AppColors.emerald.withValues(alpha: 0.1),
+                      child: const Center(
+                        child: Icon(
+                          LucideIcons.shoppingBasket,
+                          size: 30,
+                          color: AppColors.emerald,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    key: Key('cart_item_plus_${item.listingId}'),
-                    icon: const Icon(LucideIcons.plusCircle, size: 22),
-                    color: item.quantity < item.maxAllowedCapacity
-                        ? AppColors.emerald
-                        : Colors.grey,
-                    onPressed: item.quantity < item.maxAllowedCapacity
-                        ? () {
-                            ref
-                                .read(cartProvider.notifier)
-                                .updateQuantity(item.listingId, item.quantity + 1.0);
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Product Details & Stepper
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.productTitle,
+                        style: theme.textTheme.large.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      key: Key('cart_item_remove_${item.listingId}'),
+                      icon: const Icon(LucideIcons.trash2, size: 18, color: Color(0xFFEF4444)),
+                      tooltip: 'Remove',
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).removeItem(item.listingId);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '৳${item.unitPrice.toStringAsFixed(0)} / ${item.unit}',
+                      style: theme.textTheme.muted.copyWith(color: AppColors.textMuted),
+                    ),
+                    Text(
+                      '৳${item.totalAmount.toStringAsFixed(0)}',
+                      style: theme.textTheme.h4.copyWith(
+                        color: AppColors.emerald,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(color: AppColors.borderSubtle, height: 22),
+                // Quantity Adjuster Stepper
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Allocated Volume (Max: ${item.maxAllowedCapacity.toStringAsFixed(0)} ${item.unit})',
+                      style: theme.textTheme.small.copyWith(color: AppColors.textMuted),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          key: Key('cart_item_minus_${item.listingId}'),
+                          icon: const Icon(LucideIcons.minusCircle, size: 22),
+                          color: item.quantity > 1.0 ? AppColors.textPrimary : Colors.grey,
+                          onPressed: item.quantity > 1.0
+                              ? () {
+                                  ref
+                                      .read(cartProvider.notifier)
+                                      .updateQuantity(item.listingId, item.quantity - 1.0);
+                                }
+                              : null,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            '${item.quantity.toStringAsFixed(0)} ${item.unit}',
+                            key: Key('cart_item_qty_${item.listingId}'),
+                            style: theme.textTheme.large.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          key: Key('cart_item_plus_${item.listingId}'),
+                          icon: const Icon(LucideIcons.plusCircle, size: 22),
+                          color: item.quantity < item.maxAllowedCapacity
+                              ? AppColors.emerald
+                              : Colors.grey,
+                          onPressed: item.quantity < item.maxAllowedCapacity
+                              ? () {
+                                  ref
+                                      .read(cartProvider.notifier)
+                                      .updateQuantity(item.listingId, item.quantity + 1.0);
+                                }
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -474,7 +524,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Order & Escrow Summary',
+            'Order Summary',
             style: theme.textTheme.large.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: -0.3,
@@ -501,7 +551,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Community Escrow Protection:', style: theme.textTheme.muted),
+              Text('100% Buyer Protection:', style: theme.textTheme.muted),
               const Text(
                 '৳0 (Free)',
                 style: TextStyle(
@@ -513,7 +563,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
           const Divider(color: AppColors.borderSubtle, height: 24),
 
-          // Contrast: Available Balance vs Total Escrow Required
+          // Contrast: Available Balance vs Total Amount Required
           Container(
             padding: const EdgeInsets.all(14.0),
             decoration: BoxDecoration(
@@ -547,7 +597,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total Escrow Required:',
+                      'Total Order Amount:',
                       style: theme.textTheme.h4.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -599,7 +649,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'You need ৳${deficit.toStringAsFixed(0)} more in your available wallet to escrow funds for this batch reservation.',
+                    'You need ৳${deficit.toStringAsFixed(0)} more in your available wallet to place this group order.',
                     style: theme.textTheme.small.copyWith(color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 12),
@@ -646,46 +696,32 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
           ],
 
-          // Checkout Button: Confirm & Escrow Funds
+          // Proceed to Checkout Button
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ShadButton(
-              key: const Key('confirm_escrow_funds_btn'),
-              enabled: isBalanceSufficient &&
-                  hasValidAddress &&
-                  !_isCheckingOut &&
-                  totalAmount > 0,
+              key: const Key('proceed_to_checkout_btn'),
+              enabled: totalAmount > 0,
               backgroundColor: AppColors.emerald,
               foregroundColor: Colors.white,
-              onPressed: () => _handleCheckout(deliveryAddress, phone),
-              child: _isCheckingOut
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text('Escrowing Funds...'),
-                      ],
-                    )
-                  : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(LucideIcons.lock, size: 18),
-                        SizedBox(width: 8),
-                        Text(
-                          'Confirm & Escrow Funds',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                      ],
-                    ),
+              onPressed: () => context.push(RoutePaths.checkout),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Proceed to Checkout',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(৳${totalAmount.toStringAsFixed(0)})',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(LucideIcons.arrowRight, size: 18),
+                ],
+              ),
             ),
           ),
         ],

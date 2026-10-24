@@ -77,10 +77,11 @@ class CartController extends Notifier<List<CartItem>> {
 
   double get totalAmount => state.fold(0.0, (sum, item) => sum + item.totalAmount);
 
-  void validateCheckoutSufficientFunds(double availableBalance) {
-    if (totalAmount > availableBalance) {
+  void validateCheckoutSufficientFunds(double availableBalance, [double? requiredAmount]) {
+    final amountToCheck = requiredAmount ?? totalAmount;
+    if (amountToCheck > availableBalance) {
       throw InsufficientWalletBalanceException(
-        requiredAmount: totalAmount,
+        requiredAmount: amountToCheck,
         availableBalance: availableBalance,
       );
     }
@@ -93,6 +94,8 @@ class CartController extends Notifier<List<CartItem>> {
   Future<List<OrderEntity>> checkout({
     required String deliveryAddress,
     String? phone,
+    double couponDiscount = 0.0,
+    String? couponCode,
   }) async {
     if (state.isEmpty) {
       throw StateError('Cannot checkout an empty batch cart.');
@@ -108,8 +111,10 @@ class CartController extends Notifier<List<CartItem>> {
       throw ArgumentError('Delivery address is required for checkout.');
     }
 
-    // 1. Balance verification
-    validateCheckoutSufficientFunds(user.availableBalance);
+    final payableTotal = (totalAmount - couponDiscount).clamp(0.0, double.infinity);
+
+    // 1. Balance verification against payable total
+    validateCheckoutSufficientFunds(user.availableBalance, payableTotal);
 
     // 2. Capacity & Precondition verification
     final dailyListings = ref.read(dailyListingsProvider);

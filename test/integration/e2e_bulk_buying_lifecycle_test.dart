@@ -16,6 +16,7 @@ import 'package:ekshate_app/features/daily_sale/presentation/daily_sale_screen.d
 import 'package:ekshate_app/features/daily_sale/presentation/daily_sale_controller.dart';
 import 'package:ekshate_app/features/catalog/presentation/catalog_screen.dart';
 import 'package:ekshate_app/features/cart/presentation/cart_screen.dart';
+import 'package:ekshate_app/features/checkout/presentation/checkout_screen.dart';
 import 'package:ekshate_app/features/orders/presentation/orders_screen.dart';
 import 'package:ekshate_app/features/orders/data/orders_repository.dart';
 import 'package:ekshate_app/features/procurement/presentation/procurement_screen.dart';
@@ -86,6 +87,10 @@ void main() {
         GoRoute(
           path: RoutePaths.login,
           builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: RoutePaths.checkout,
+          builder: (context, state) => const CheckoutScreen(),
         ),
         GoRoute(
           path: RoutePaths.profileSetup,
@@ -205,7 +210,7 @@ void main() {
         router.go(RoutePaths.wallet);
         await tester.pumpAndSettle();
 
-        expect(find.text('Wallet & Escrow'), findsOneWidget);
+        expect(find.text('My Wallet'), findsOneWidget);
         // Initial balance is 0 for newly onboarded user
         expect(find.text('৳0'), findsWidgets);
 
@@ -271,6 +276,7 @@ void main() {
 
         // Tap "Reserve Volume" button
         final reserveBtn = find.byKey(const Key('reserve_volume_btn_listing_orange_01'));
+        await tester.ensureVisible(reserveBtn);
         await tester.tap(reserveBtn);
         await tester.pumpAndSettle();
 
@@ -289,7 +295,13 @@ void main() {
         expect(find.text('3 kg'), findsOneWidget);
         expect(find.text('৳540'), findsWidgets);
 
-        // Tap "Confirm & Escrow Funds" button
+        // Tap "Proceed to Checkout" button
+        final proceedBtn = find.byKey(const Key('proceed_to_checkout_btn'));
+        expect(proceedBtn, findsOneWidget);
+        await tester.tap(proceedBtn);
+        await tester.pumpAndSettle();
+
+        // Now on Checkout Screen: Tap "Confirm & Place Order" button
         final confirmBtn = find.byKey(const Key('confirm_escrow_funds_btn'));
         expect(confirmBtn, findsOneWidget);
         await tester.tap(confirmBtn);
@@ -297,11 +309,11 @@ void main() {
 
         // Redirected to OrdersScreen
         expect(find.text('My Bulk Orders'), findsOneWidget);
-        expect(find.text('PENDING ESCROW'), findsOneWidget);
+        expect(find.text('PENDING'), findsOneWidget);
         expect(find.text('3 kg'), findsOneWidget);
         expect(find.text('৳540'), findsOneWidget);
         expect(find.text('Allocated Bucket #1'), findsOneWidget);
-        expect(find.text('Funds are held securely until bucket hits MOQ.'), findsOneWidget);
+        expect(find.text('Payment is held safely until the group reaches its wholesale target.'), findsOneWidget);
 
         // User balances updated: 2500 - 540 = 1960 available, 540 escrow
         expect(mockAuthRepo.currentUser?.availableBalance, equals(1960.0));
